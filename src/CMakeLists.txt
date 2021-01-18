@@ -11,6 +11,7 @@ set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/teensy_st7735_linux_stub
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/teensy_st7735_linux_stubs )
 
 set(SOURCE_FILES
+		glcdfont.c
 		ST7735_t3.cpp)
 
 set(HEADER_FILES

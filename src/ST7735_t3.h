@@ -20,6 +20,7 @@
 #define __ST7735_t3_H_
 
 #include "Arduino.h"
+#include "ILI9341_fonts.h"
 
 #define INITR_GREENTAB 0x0
 #define INITR_REDTAB   0x1
@@ -32,8 +33,6 @@
 #define INITR_144GREENTAB_OFFSET   0x4
 #define INITR_MINI160x80  0x05
 #define INITR_MINI160x80_ST7735S 0x06
-
-#define INIT_ST7789_TABCOLOR 42  // Not used except as a indicator to the code...
 
 #define ST7735_TFTWIDTH  128
 #define ST7735_TFTWIDTH_80     80 // for mini
@@ -122,18 +121,20 @@ class ST7735_t3 : public Print
 
  public:
 
-  ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1);
-  ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1);
+  ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1) ;
+  ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1) ;
 
-  void     initB(void),                             // for ST7735B displays
-           initR(uint8_t options = INITR_GREENTAB), // for ST7735R
-           setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
-           pushColor(uint16_t color, bool last_pixel=false),
-           fillScreen(uint16_t color),
-           drawPixel(int16_t x, int16_t y, uint16_t color),
-           drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
-           drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
-           fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+  ST7735_t3() {}
+
+    void     initB(void) ;                         // for ST7735B displays
+    void      initR(uint8_t options = INITR_GREENTAB);   // for ST7735R
+    void       setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+    void       pushColor(uint16_t color, bool last_pixel=false);
+    void      fillScreen(uint16_t color);
+    void       drawPixel(int16_t x, int16_t y, uint16_t color);
+    void      drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+    void       drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+    void       fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     inline void fillWindow(uint16_t color) {fillScreen(color);}
     virtual void setRotation(uint8_t r);
     void     invertDisplay(bool i);
@@ -147,7 +148,7 @@ class ST7735_t3 : public Print
     int16_t height(void) const { return _height; }
     uint8_t getRotation(void);
 
-	void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 	void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
 	void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 	void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
@@ -176,11 +177,11 @@ class ST7735_t3 : public Print
     bool getTextWrap();
 
 	//////
-	virtual size_t write(uint16_t);
-	virtual size_t write(const uint16_t *buffer, size_t size);
+	size_t write(uint16_t);
+	size_t write(const uint16_t *buffer, size_t size);
 	int16_t getCursorX(void) const { return cursor_x; }
 	int16_t getCursorY(void) const { return cursor_y; }
-	//void setFont(const ILI9341_t3_font_t &f);
+	void setFont(const ILI9341_t3_font_t &f);
     void setFont(const GFXfont *f = NULL);
 	void setFontAdafruit(void) { setFont(); }
 	void drawFontChar(unsigned int c);
@@ -401,7 +402,7 @@ class ST7735_t3 : public Print
 		return (uint16_t)((result >> 16) | result); // contract result
 	}
 
-	void Pixel(int16_t x, int16_t y, uint16_t color);
+    virtual void Pixel(int16_t x, int16_t y, uint16_t color);
 
 };
 
