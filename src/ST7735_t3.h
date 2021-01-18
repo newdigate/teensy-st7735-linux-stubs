@@ -317,7 +317,7 @@ class ST7735_t3 : public Print
 	uint32_t textcolorPrexpanded, textbgcolorPrexpanded;
 	uint8_t textsize_x, textsize_y, rotation, textdatum;
 	bool  wrap; // If set, 'wrap' text at right edge of display
-	//const ILI9341_t3_font_t *font;
+	const ILI9341_t3_font_t *font;
 	// Anti-aliased font support
 	uint8_t fontbpp = 1;
 	uint8_t fontbppindex = 0;
