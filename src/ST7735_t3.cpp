@@ -11,21 +11,59 @@
   Adafruit invests time and resources providing this open source code,
   please support Adafruit and open-source hardware by purchasing
   products from Adafruit!
-
   Written by Limor Fried/Ladyada for Adafruit Industries.
   MIT license, all text above must be included in any redistribution
  ****************************************************/
 
 #include "ST7735_t3.h"
 #include <limits.h>
+#include "pins_arduino.h"
 #include <cstdint>
 #include "cstdlib"
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
+
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+//#define DEBUG_ASYNC_UPDATE
+//#define DEBUG_ASYNC_LEDS
+#ifdef DEBUG_ASYNC_LEDS
+  #define DEBUG_PIN_1 0
+  #define DEBUG_PIN_2 1
+  #define DEBUG_PIN_3 2
+#endif
+
+volatile short _dma_dummy_rx;
+
+ST7735_t3 *ST7735_t3::_dmaActiveDisplay[3] = {0, 0, 0};
+
+#if defined(__MK66FX1M0__)
+ DMASetting   ST7735_t3::_dmasettings[3][4];
+#endif
+
+#if defined(__IMXRT1062__)  // Teensy 4.x
+// On T4 Setup the buffers to be used one per SPI buss...
+// This way we make sure it is hopefully in uncached memory
+ST7735DMA_Data ST7735_t3::_dma_data[3];   // one structure for each SPI buss...
+#endif
+
+#endif
+
 // Constructor when using software SPI.  All output pins are configurable.
 ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t sid, uint8_t sclk, uint8_t rst)
 {
+    _cs   = cs;
+    _rs   = rs;
+    _sid  = sid;
+    _sclk = sclk;
+    _rst  = rst;
     _rot = 0xff;
+    hwSPI = false;
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    _pfbtft = NULL;
+    _use_fbtft = 0;						// Are we in frame buffer mode?
+	_we_allocated_buffer = NULL;
+	_dma_state = 0;
+#endif
     _screenHeight = ST7735_TFTHEIGHT_160;
     _screenWidth = ST7735_TFTWIDTH;
 
@@ -37,17 +75,29 @@ ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t sid, uint8_t sclk, uint8_t 
     textsize_y  = 1;
     textcolor = textbgcolor = 0xFFFF;
     wrap      = true;
-//    font      = NULL;
+    font      = NULL;
     gfxFont   = NULL;
     setClipRect();
     setOrigin();
 }
 
+
 // Constructor when using hardware SPI.  Faster, but must use SPI pins
 // specific to each board type (e.g. 11,13 for Uno, 51,52 for Mega, etc.)
 ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t rst)
 {
+    _cs   = cs;
+    _rs   = rs;
+    _rst  = rst;
     _rot = 0xff;
+    hwSPI = true;
+    _sid  = _sclk = (uint8_t)-1;
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    _pfbtft = NULL;
+    _use_fbtft = 0;						// Are we in frame buffer mode?
+	_we_allocated_buffer = NULL;
+	_dma_state = 0;
+#endif
     _screenHeight = ST7735_TFTHEIGHT_160;
     _screenWidth = ST7735_TFTWIDTH;
 
@@ -56,60 +106,460 @@ ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t rst)
     textsize_y  = 1;
     textcolor = textbgcolor = 0xFFFF;
     wrap      = true;
-    //font      = NULL;
+    font      = NULL;
     gfxFont   = NULL;
     setClipRect();
     setOrigin();
 }
 
+
+
+/***************************************************************/
+/*     Teensy 3.0, 3.1, 3.2, 3.5, 3.6                          */
+/***************************************************************/
+#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
+
+inline void ST7735_t3::waitTransmitComplete(void)  {
+    uint32_t tmp __attribute__((unused));
+    while (!(_pkinetisk_spi->SR & SPI_SR_TCF)) ; // wait until final output done
+    tmp = _pkinetisk_spi->POPR;                  // drain the final RX FIFO word
+}
+
+inline void ST7735_t3::waitTransmitComplete(uint32_t mcr) {
+    uint32_t tmp __attribute__((unused));
+    while (1) {
+        uint32_t sr = _pkinetisk_spi->SR;
+        if (sr & SPI_SR_EOQF) break;  // wait for last transmit
+        if (sr &  0xF0) tmp = _pkinetisk_spi->POPR;
+    }
+    _pkinetisk_spi->SR = SPI_SR_EOQF;
+    _pkinetisk_spi->MCR = mcr;
+    while (_pkinetisk_spi->SR & 0xF0) {
+        tmp = _pkinetisk_spi->POPR;
+    }
+}
+
+inline void ST7735_t3::spiwrite(uint8_t c)
+{
+	// pass 1 if we actually are setup to with MOSI and SCLK on hardware SPI use it...
+	if (_pspi) {
+		_pspi->transfer(c);
+		return;
+	}
+
+	for (uint8_t bit = 0x80; bit; bit >>= 1) {
+		*datapin = ((c & bit) ? 1 : 0);
+		*clkpin = 1;
+		*clkpin = 0;
+	}
+}
+
+inline void ST7735_t3::spiwrite16(uint16_t d)
+{
+	// pass 1 if we actually are setup to with MOSI and SCLK on hardware SPI use it...
+	if (_pspi) {
+		_pspi->transfer16(d);
+		return;
+	}
+	spiwrite(d >> 8);
+	spiwrite(d);
+}
+
+void ST7735_t3::writecommand(uint8_t c)
+{
+	if (hwSPI) {
+		_pkinetisk_spi->PUSHR = c | (pcs_command << 16) | SPI_PUSHR_CTAS(0);
+		while (((_pkinetisk_spi->SR) & (15 << 12)) > _fifo_full_test) ; // wait if FIFO full
+	} else {
+		*rspin = 0;
+		spiwrite(c);
+	}
+}
+
+void ST7735_t3::writecommand_last(uint8_t c) {
+	if (hwSPI) {
+		uint32_t mcr = _pkinetisk_spi->MCR;
+		_pkinetisk_spi->PUSHR = c | (pcs_command << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_EOQ;
+		waitTransmitComplete(mcr);
+	} else {
+		*rspin = 0;
+		spiwrite(c);
+	}
+}
+
+void ST7735_t3::writedata(uint8_t c)
+{
+	if (hwSPI) {
+		_pkinetisk_spi->PUSHR = c | (pcs_data << 16) | SPI_PUSHR_CTAS(0);
+		while (((_pkinetisk_spi->SR) & (15 << 12)) > _fifo_full_test) ; // wait if FIFO full
+	} else {
+		*rspin = 1;
+		spiwrite(c);
+	}
+}
+
+void ST7735_t3::writedata_last(uint8_t c)
+{
+	if (hwSPI) {
+		uint32_t mcr = _pkinetisk_spi->MCR;
+		_pkinetisk_spi->PUSHR = c | (pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_EOQ;
+		waitTransmitComplete(mcr);
+	} else {
+		*rspin = 1;
+		spiwrite(c);
+	}
+}
+
+void ST7735_t3::writedata16(uint16_t d)
+{
+	if (hwSPI) {
+		_pkinetisk_spi->PUSHR = d | (pcs_data << 16) | SPI_PUSHR_CTAS(1);
+		while (((_pkinetisk_spi->SR) & (15 << 12)) > _fifo_full_test) ; // wait if FIFO full
+	} else {
+		*rspin = 1;
+		spiwrite16(d);
+	}
+}
+
+
+void ST7735_t3::writedata16_last(uint16_t d)
+{
+	if (hwSPI) {
+		uint32_t mcr = _pkinetisk_spi->MCR;
+		_pkinetisk_spi->PUSHR = d | (pcs_data << 16) | SPI_PUSHR_CTAS(1) | SPI_PUSHR_EOQ;
+		waitTransmitComplete(mcr);
+	} else {
+		*rspin = 1;
+		spiwrite16(d);
+	}
+}
+
+
+#define CTAR_24MHz   (SPI_CTAR_PBR(0) | SPI_CTAR_BR(0) | SPI_CTAR_CSSCK(0) | SPI_CTAR_DBR)
+#define CTAR_16MHz   (SPI_CTAR_PBR(1) | SPI_CTAR_BR(0) | SPI_CTAR_CSSCK(0) | SPI_CTAR_DBR)
+#define CTAR_12MHz   (SPI_CTAR_PBR(0) | SPI_CTAR_BR(0) | SPI_CTAR_CSSCK(0))
+#define CTAR_8MHz    (SPI_CTAR_PBR(1) | SPI_CTAR_BR(0) | SPI_CTAR_CSSCK(0))
+#define CTAR_6MHz    (SPI_CTAR_PBR(0) | SPI_CTAR_BR(1) | SPI_CTAR_CSSCK(1))
+#define CTAR_4MHz    (SPI_CTAR_PBR(1) | SPI_CTAR_BR(1) | SPI_CTAR_CSSCK(1))
+
+void ST7735_t3::setBitrate(uint32_t n)
+{
+	if (n >= 24000000) {
+		ctar = CTAR_24MHz;
+	} else if (n >= 16000000) {
+		ctar = CTAR_16MHz;
+	} else if (n >= 12000000) {
+		ctar = CTAR_12MHz;
+	} else if (n >= 8000000) {
+		ctar = CTAR_8MHz;
+	} else if (n >= 6000000) {
+		ctar = CTAR_6MHz;
+	} else {
+		ctar = CTAR_4MHz;
+	}
+	SIM_SCGC6 |= SIM_SCGC6_SPI0;
+	_pkinetisk_spi->MCR = SPI_MCR_MDIS | SPI_MCR_HALT;
+	_pkinetisk_spi->CTAR0 = ctar | SPI_CTAR_FMSZ(7);
+	_pkinetisk_spi->CTAR1 = ctar | SPI_CTAR_FMSZ(15);
+	_pkinetisk_spi->MCR = SPI_MCR_MSTR | SPI_MCR_PCSIS(0x1F) | SPI_MCR_CLR_TXF | SPI_MCR_CLR_RXF;
+}
+
+
+/***************************************************************/
+/*     Teensy 4.                                               */
+/***************************************************************/
+#elif defined(__IMXRT1062__)  // Teensy 4.x
+inline void ST7735_t3::spiwrite(uint8_t c)
+{
+//Serial.println(c, HEX);
+	if (_pspi) {
+		_pspi->transfer(c);
+	} else {
+		// Fast SPI bitbang swiped from LPD8806 library
+		for(uint8_t bit = 0x80; bit; bit >>= 1) {
+			if(c & bit) DIRECT_WRITE_HIGH(_mosiport, _mosipinmask);
+			else        DIRECT_WRITE_LOW(_mosiport, _mosipinmask);
+			DIRECT_WRITE_HIGH(_sckport, _sckpinmask);
+			asm("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;");
+			DIRECT_WRITE_LOW(_sckport, _sckpinmask);
+		}
+	}
+}
+
+void ST7735_t3::writecommand(uint8_t c)
+{
+	if (hwSPI) {
+		maybeUpdateTCR(_tcr_dc_assert | LPSPI_TCR_FRAMESZ(7) /*| LPSPI_TCR_CONT*/);
+		_pimxrt_spi->TDR = c;
+		_pending_rx_count++;	//
+		waitFifoNotFull();
+	} else {
+		DIRECT_WRITE_LOW(_dcport, _dcpinmask);
+		spiwrite(c);
+	}
+}
+
+void ST7735_t3::writecommand_last(uint8_t c)
+{
+	if (hwSPI) {
+		maybeUpdateTCR(_tcr_dc_assert | LPSPI_TCR_FRAMESZ(7));
+		_pimxrt_spi->TDR = c;
+		_pending_rx_count++;	//
+		waitTransmitComplete();
+	} else {
+		DIRECT_WRITE_LOW(_dcport, _dcpinmask);
+		spiwrite(c);
+	}
+
+}
+
+void ST7735_t3::writedata(uint8_t c)
+{
+	if (hwSPI) {
+		maybeUpdateTCR(_tcr_dc_not_assert | LPSPI_TCR_FRAMESZ(7));
+		_pimxrt_spi->TDR = c;
+		_pending_rx_count++;	//
+		waitTransmitComplete();
+	} else {
+		DIRECT_WRITE_HIGH(_dcport, _dcpinmask);
+		spiwrite(c);
+	}
+}
+
+void ST7735_t3::writedata_last(uint8_t c)
+{
+	if (hwSPI) {
+		maybeUpdateTCR(_tcr_dc_not_assert | LPSPI_TCR_FRAMESZ(7));
+		_pimxrt_spi->TDR = c;
+		_pending_rx_count++;	//
+		waitTransmitComplete();
+	} else {
+		DIRECT_WRITE_HIGH(_dcport, _dcpinmask);
+		spiwrite(c);
+	}
+}
+
+
+void ST7735_t3::writedata16(uint16_t d)
+{
+	if (hwSPI) {
+		maybeUpdateTCR(_tcr_dc_not_assert | LPSPI_TCR_FRAMESZ(15) | LPSPI_TCR_CONT);
+		_pimxrt_spi->TDR = d;
+		_pending_rx_count++;	//
+		waitFifoNotFull();
+	} else {
+		DIRECT_WRITE_HIGH(_dcport, _dcpinmask);
+		spiwrite(d >> 8);
+		spiwrite(d);
+	}
+}
+
+void ST7735_t3::writedata16_last(uint16_t d)
+{
+	if (hwSPI) {
+		maybeUpdateTCR(_tcr_dc_not_assert | LPSPI_TCR_FRAMESZ(15));
+		_pimxrt_spi->TDR = d;
+//		_pimxrt_spi->SR = LPSPI_SR_WCF | LPSPI_SR_FCF | LPSPI_SR_TCF;
+		_pending_rx_count++;	//
+		waitTransmitComplete();
+	} else {
+		DIRECT_WRITE_HIGH(_dcport, _dcpinmask);
+		spiwrite(d >> 8);
+		spiwrite(d);
+	}
+}
+
+void ST7735_t3::setBitrate(uint32_t n)
+{
+	if (n >= 8000000) {
+		SPI.setClockDivider(SPI_CLOCK_DIV2);
+	} else if (n >= 4000000) {
+		SPI.setClockDivider(SPI_CLOCK_DIV4);
+	} else if (n >= 2000000) {
+		SPI.setClockDivider(SPI_CLOCK_DIV8);
+	} else {
+		SPI.setClockDivider(SPI_CLOCK_DIV16);
+	}
+}
+
+
+/***************************************************************/
+/*     Teensy LC                                               */
+/***************************************************************/
+#elif defined(__MKL26Z64__)
+
+void ST7735_t3::waitTransmitComplete()  {
+	if(!_pkinetisl_spi) return; // Software SPI don't do anything
+	while (_data_sent_not_completed) {
+		uint16_t timeout_count = 0xff; // hopefully enough
+		while (!(_pkinetisl_spi->S & SPI_S_SPRF) && timeout_count--) ; // wait
+		uint8_t d __attribute__((unused));
+		d = _pkinetisl_spi->DL;
+		d = _pkinetisl_spi->DH;
+		_data_sent_not_completed--; // We hopefully received our data...
+	}
+}
+
+void ST7735_t3::spiwrite16(uint16_t data)  {
+	if (_pkinetisl_spi) {
+		if (!(_pkinetisl_spi->C2 & SPI_C2_SPIMODE)) {
+			// Wait to change modes until any pending output has been done.
+			waitTransmitComplete();
+			_pkinetisl_spi->C2 = SPI_C2_SPIMODE; // make sure 8 bit mode.
+		}
+		uint8_t s;
+		do {
+			s = _pkinetisl_spi->S;
+			 // wait if output buffer busy.
+			// Clear out buffer if there is something there...
+			if  ((s & SPI_S_SPRF)) {
+				uint8_t d __attribute__((unused));
+				d = _pkinetisl_spi->DL;
+				d = _pkinetisl_spi->DH;
+				_data_sent_not_completed--; 	// let system know we sent something
+			}
+
+		} while (!(s & SPI_S_SPTEF) || (s & SPI_S_SPRF));
+
+		_pkinetisl_spi->DL = data; 		// output low byte
+		_pkinetisl_spi->DH = data >> 8; // output high byte
+		_data_sent_not_completed++; 	// let system know we sent something
+	} else {
+		// call bitbang functions
+		spiwrite(data >> 8);
+		spiwrite(data);
+	}
+}
+
+inline void ST7735_t3::spiwrite(uint8_t c)
+{
+//Serial.println(c, HEX);
+	if (_pkinetisl_spi) {
+		if (_pkinetisl_spi->C2 & SPI_C2_SPIMODE) {
+			// Wait to change modes until any pending output has been done.
+			waitTransmitComplete();
+			_pkinetisl_spi->C2 = 0; // make sure 8 bit mode.
+		}
+		while (!(_pkinetisl_spi->S & SPI_S_SPTEF)) ; // wait if output buffer busy.
+		// Clear out buffer if there is something there...
+		if  ((_pkinetisl_spi->S & SPI_S_SPRF)) {
+			uint8_t d __attribute__((unused));
+			d = _pkinetisl_spi->DL;
+			_data_sent_not_completed--;
+		}
+		_pkinetisl_spi->DL = c; // output byte
+		_data_sent_not_completed++; // let system know we sent something
+
+	} else {
+		// Fast SPI bitbang swiped from LPD8806 library
+		for(uint8_t bit = 0x80; bit; bit >>= 1) {
+			if(c & bit) *dataport |=  datapinmask;
+			else        *dataport &= ~datapinmask;
+			*clkport |=  clkpinmask;
+			*clkport &= ~clkpinmask;
+		}
+	}
+}
+
+void ST7735_t3::writecommand(uint8_t c)
+{
+	setCommandMode();
+	spiwrite(c);
+}
+void ST7735_t3::writecommand_last(uint8_t c)
+{
+	setCommandMode();
+	spiwrite(c);
+	waitTransmitComplete();
+}
+
+void ST7735_t3::writedata(uint8_t c)
+{
+	setDataMode();
+	spiwrite(c);
+}
+
+void ST7735_t3::writedata_last(uint8_t c)
+{
+	setDataMode();
+	spiwrite(c);
+	waitTransmitComplete();
+}
+
+void ST7735_t3::writedata16(uint16_t d)
+{
+	setDataMode();
+	spiwrite16(d);
+}
+
+void ST7735_t3::writedata16_last(uint16_t d)
+{
+	setDataMode();
+	spiwrite16(d);
+	waitTransmitComplete();
+	_pkinetisl_spi->C2 = 0; // Set back to 8 bit mode...
+	_pkinetisl_spi->S;	// Read in the status;
+}
+
+void ST7735_t3::setBitrate(uint32_t n)
+{
+	if (n >= 8000000) {
+		SPI.setClockDivider(SPI_CLOCK_DIV2);
+	} else if (n >= 4000000) {
+		SPI.setClockDivider(SPI_CLOCK_DIV4);
+	} else if (n >= 2000000) {
+		SPI.setClockDivider(SPI_CLOCK_DIV8);
+	} else {
+		SPI.setClockDivider(SPI_CLOCK_DIV16);
+	}
+}
+#endif //#if defined(__SAM3X8E__)
+
+
+// Companion code to the above tables.  Reads and issues
+// a series of LCD commands stored in PROGMEM byte array.
+void ST7735_t3::commandList(const uint8_t *addr)
+{
+}
+
+
+// Initialization code common to both 'B' and 'R' type displays
+void ST7735_t3::commonInit(const uint8_t *cmdList, uint8_t mode)
+{
+    _colstart  = _rowstart = 0; // May be overridden in init func
+    _ystart = _xstart = 0;
+}
+
+
 // Initialization for ST7735B screens
 void ST7735_t3::initB(void)
 {
+//    commonInit(Bcmd);
 }
+
 
 // Initialization for ST7735R screens (green or red tabs)
 void ST7735_t3::initR(uint8_t options)
 {
-    if (options == INITR_GREENTAB) {
-        _colstart = 2;
-        _rowstart = 1;
-    } else if(options == INITR_144GREENTAB) {
-        _screenHeight = ST7735_TFTHEIGHT_144;
-        _colstart = 2;
-        _rowstart = 3;
-    } else if(options == INITR_144GREENTAB_OFFSET) {
-        _screenHeight = ST7735_TFTHEIGHT_144;
-        _colstart = 0;
-        _rowstart = 32;
-    } else if(options == INITR_MINI160x80) {
-        _screenHeight   = ST7735_TFTHEIGHT_160;
-        _screenWidth    = ST7735_TFTWIDTH_80;
-        _colstart = 24;
-        _rowstart = 0;
-    } else if (options == INITR_MINI160x80_ST7735S) {
-        _screenHeight   = 160;
-        _screenWidth    = 80;
-        _colstart = 26;
-        _rowstart = 1;
-    } else {
-        // _colstart, _rowstart left at default '0' values
-    }
-
-    // if black or mini, change MADCTL color filter
-    if ((options == INITR_BLACKTAB)  || (options == INITR_MINI160x80)){
-    }
-
     tabcolor = options;
     setRotation(0);
 }
 
+
+void ST7735_t3::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+{
+
+}
+
+
 void ST7735_t3::pushColor(uint16_t color, bool last_pixel)
 {
-    // TODO:
+
 }
 
 //#include "glcdfont.c"
 extern "C" const unsigned char glcdfont[];
+
 
 void ST7735_t3::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
@@ -118,6 +568,19 @@ void ST7735_t3::drawPixel(int16_t x, int16_t y, uint16_t color)
 
     if((x < _displayclipx1) ||(x >= _displayclipx2) || (y < _displayclipy1) || (y >= _displayclipy2)) return;
 
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (_use_fbtft) {
+		_pfbtft[y*_width + x] = color;
+
+	} else
+#endif
+    {
+        beginSPITransaction();
+        setAddr(x,y,x+1,y+1);
+        writecommand(ST7735_RAMWR);
+        writedata16_last(color);
+        endSPITransaction();
+    }
 }
 
 
@@ -131,8 +594,27 @@ void ST7735_t3::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
     if((y+h-1) >= _displayclipy2) h = _displayclipy2-y;
     if(h<1) return;
 
-    drawLine(x, y, x, y + h, color);
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (_use_fbtft) {
+		uint16_t * pfbPixel = &_pfbtft[ y*_width + x];
+		while (h--) {
+			*pfbPixel = color;
+			pfbPixel += _width;
+		}
+	} else
+#endif
+    {
+        beginSPITransaction();
+        setAddr(x, y, x, y+h-1);
+        writecommand(ST7735_RAMWR);
+        while (h-- > 1) {
+            writedata16(color);
+        }
+        writedata16_last(color);
+        endSPITransaction();
+    }
 }
+
 
 void ST7735_t3::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
 {
@@ -144,7 +626,28 @@ void ST7735_t3::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     if(x<_displayclipx1) { w = w - (_displayclipx1 - x); x = _displayclipx1; }
     if((x+w-1) >= _displayclipx2)  w = _displayclipx2-x;
     if (w<1) return;
-    drawLine(x, y, x + w, y, color);
+
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (_use_fbtft) {
+		if ((x&1) || (w&1)) {
+			uint16_t * pfbPixel = &_pfbtft[ y*_width + x];
+			while (w--) {
+				*pfbPixel++ = color;
+			}
+		} else {
+			// X is even and so is w, try 32 bit writes..
+			uint32_t color32 = (color << 16) | color;
+			uint32_t * pfbPixel = (uint32_t*)((uint16_t*)&_pfbtft[ y*_width + x]);
+			while (w) {
+				*pfbPixel++ = color32;
+				w -= 2;
+			}
+		}
+	} else
+#endif
+    {
+
+    }
 }
 
 void ST7735_t3::fillScreen(uint16_t color)
@@ -166,7 +669,38 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
     if((x + w - 1) >= _displayclipx2)  w = _displayclipx2  - x;
     if((y + h - 1) >= _displayclipy2) h = _displayclipy2 - y;
 
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (_use_fbtft) {
+		if ((x&1) || (w&1)) {
+			uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
+			for (;h>0; h--) {
+				uint16_t * pfbPixel = pfbPixel_row;
+				for (int i = 0 ;i < w; i++) {
+					*pfbPixel++ = color;
+				}
+				pfbPixel_row += _width;
+			}
+		} else {
+			// Horizontal is even number so try 32 bit writes instead
+			uint32_t color32 = (color << 16) | color;
+			uint32_t * pfbPixel_row = (uint32_t *)((uint16_t*)&_pfbtft[ y*_width + x]);
+			w = w/2;	// only iterate half the times
+			for (;h>0; h--) {
+				uint32_t * pfbPixel = pfbPixel_row;
+				for (int i = 0 ;i < w; i++) {
+					*pfbPixel++ = color32;
+				}
+				pfbPixel_row += (_width/2);
+			}
+		}
+	} else
+#endif
+    {
 
+        // TODO: this can result in a very long transaction time
+        // should break this into multiple transactions, even though
+        // it'll cost more overhead, so we don't stall other SPI libs
+    }
 }
 
 
@@ -181,8 +715,41 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
 void ST7735_t3::setRotation(uint8_t m)
 {
     //Serial.printf("Setting Rotation to %d\n", m);
+    beginSPITransaction();
+    //writecommand(ST7735_MADCTL);
     rotation = m % 4; // can't be higher than 3
+    switch (rotation) {
+        case 0:
+            _width  = _screenWidth;
+            _height = _screenHeight;
+            _xstart = _colstart;
+            _ystart = _rowstart;
+            break;
+        case 1:
+            _height = _screenWidth;
+            _width  = _screenHeight;
+            _ystart = _colstart;
+            _xstart = _rowstart;
+            break;
+        case 2:
+            _width  = _screenWidth;
+            _height = _screenHeight;
+            _xstart = _colstart;
+            // hack to make work on a couple different displays
+            _ystart = (_rowstart==0 || _rowstart==32)? 0 : 1;//_rowstart;
+            break;
+        case 3:
+            _width = _screenHeight;
+            _height = _screenWidth;
+            _ystart = _colstart;
+            // hack to make work on a couple different displays
+            _xstart = (_rowstart==0 || _rowstart==32)? 0 : 1;//_rowstart;
+            break;
+    }
     _rot = rotation;	// remember the rotation...
+
+    //Serial.printf("SetRotation(%d) _xstart=%d _ystart=%d _width=%d, _height=%d\n", _rot, _xstart, _ystart, _width, _height);
+
 
     setClipRect();
     setOrigin();
@@ -208,6 +775,9 @@ void ST7735_t3::invertDisplay(bool i)
  @param   dataBytes         A pointer to the Data bytes to send
  @param   numDataBytes      The number of bytes we should send
  */
+void ST7735_t3::sendCommand(uint8_t commandByte, const uint8_t *dataBytes, uint8_t numDataBytes) {
+
+}
 
 uint16_t ST7735_t3::readPixel(int16_t x, int16_t y)
 {
@@ -224,6 +794,20 @@ void ST7735_t3::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *p
     x+=_originx;
     y+=_originy;
     //BUGBUG:: Should add some validation of X and Y
+
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (_use_fbtft) {
+		uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
+		for (;h>0; h--) {
+			uint16_t * pfbPixel = pfbPixel_row;
+			for (int i = 0 ;i < w; i++) {
+				*pcolors++ = *pfbPixel++;
+			}
+			pfbPixel_row += _width;
+		}
+		return;
+	}
+#endif
 }
 
 // Now lets see if we can writemultiple pixels
@@ -262,6 +846,24 @@ void ST7735_t3::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint
         w = _displayclipx2  - x;
         x_clip_right -= w;
     }
+
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (_use_fbtft) {
+		uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
+		for (;h>0; h--) {
+			uint16_t * pfbPixel = pfbPixel_row;
+			pcolors += x_clip_left;
+			for (int i = 0 ;i < w; i++) {
+				*pfbPixel++ = *pcolors++;
+			}
+			pfbPixel_row += _width;
+			pcolors += x_clip_right;
+
+		}
+		return;
+	}
+#endif
+
 }
 
 ///
@@ -543,6 +1145,11 @@ void ST7735_t3::drawLine(int16_t x0, int16_t y0,
         ystep = -1;
     }
 
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (!_use_fbtft) beginSPITransaction();
+#else
+    beginSPITransaction();
+#endif
     int16_t xbegin = x0;
     if (steep) {
         for (; x0<=x1; x0++) {
@@ -582,7 +1189,13 @@ void ST7735_t3::drawLine(int16_t x0, int16_t y0,
             HLine(xbegin, y0, x0 - xbegin, color);
         }
     }
-
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+    if (!_use_fbtft) {
+		writecommand_last(ST7735_NOP);
+		endSPITransaction();
+  	}
+#else
+#endif
 }
 
 void ST7735_t3::drawBitmap(int16_t x, int16_t y,
@@ -662,11 +1275,11 @@ void ST7735_t3::setTextColor(uint16_t c, uint16_t b) {
     textbgcolorPrexpanded = (textbgcolor | (textbgcolor << 16)) & 0b00000111111000001111100000011111;
 }
 
-void ST7735_t3::setTextWrap(bool  w) {
+void ST7735_t3::setTextWrap(bool w) {
     wrap = w;
 }
 
-bool  ST7735_t3::getTextWrap()
+bool ST7735_t3::getTextWrap()
 {
     return wrap;
 }
@@ -708,9 +1321,6 @@ int16_t ST7735_t3::drawFloat(float floatNumber, int dp, int poX, int poY)
     char *format2 = "%%.%df";
     sprintf(format2, format, dp);
     sprintf(str, format2, floatNumber);
-
-    // Finally we can plot the string and return pixel length
-    return drawString(str, poX, poY);
 }
 
 /***************************************************************************************
@@ -795,13 +1405,12 @@ int16_t ST7735_t3::drawString1(char string[], int16_t len, int poX, int poY)
         if (poY < 0) poY = 0;
         //if (poY+cheight-baseline >_height) poY = _height - cheight;
     }
-    //if(font == NULL){
-    //    for(uint8_t i = 0; i < len-2; i++){
-    //        drawChar((int16_t) (poX+sumX), (int16_t) poY, string[i], textcolor, textbgcolor, textsize_x, textsize_y);
-    //        sumX += cwidth/(len-2) + padding;
-    //    }
-    //}
-    else {
+    if(font == NULL){
+        for(uint8_t i = 0; i < len-2; i++){
+            drawChar((int16_t) (poX+sumX), (int16_t) poY, string[i], textcolor, textbgcolor, textsize_x, textsize_y);
+            sumX += cwidth/(len-2) + padding;
+        }
+    } else {
         setCursor(poX, poY);
         for(uint8_t i = 0; i < len-2; i++){
             drawFontChar(string[i]);
@@ -876,7 +1485,18 @@ size_t ST7735_t3::write(const uint16_t *buffer, size_t size)
         uint8_t c = *buffer++;
         cb--;
 
-        if (gfxFont)  {
+        if (font) {
+            if (c == '\n') {
+                cursor_y += font->line_space;
+                if(scrollEnable && isWritingScrollArea){
+                    cursor_x  = scroll_x;
+                }else{
+                    cursor_x  = 0;
+                }
+            } else {
+                drawFontChar(c);
+            }
+        } else if (gfxFont)  {
             if (c == '\n') {
                 cursor_y += (int16_t)textsize_y * gfxFont->yAdvance;
                 if(scrollEnable && isWritingScrollArea){
@@ -1019,23 +1639,93 @@ void ST7735_t3::drawChar(int16_t x, int16_t y, unsigned char c,
         uint16_t color;
 
         // We need to offset by the origin.
-        x += _originx;
-        y += _originy;
+        x+=_originx;
+        y+=_originy;
         int16_t x_char_start = x;  // remember our X where we start outputting...
 
-        if ((x >= _displayclipx2) || // Clip right
-            (y >= _displayclipy2) || // Clip bottom
-            ((x + 6 * size_x - 1) < _displayclipx1) || // Clip left  TODO: this is not correct
-            ((y + 8 * size_y - 1) < _displayclipy1))   // Clip top   TODO: this is not correct
+        if((x >= _displayclipx2)            || // Clip right
+           (y >= _displayclipy2)           || // Clip bottom
+           ((x + 6 * size_x - 1) < _displayclipx1) || // Clip left  TODO: this is not correct
+           ((y + 8 * size_y - 1) < _displayclipy1))   // Clip top   TODO: this is not correct
             return;
 
+
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+        if (_use_fbtft) {
+			uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
+			for (yc=0; (yc < 8) && (y < _displayclipy2); yc++) {
+				for (yr=0; (yr < size_y) && (y < _displayclipy2); yr++) {
+					x = x_char_start; 		// get our first x position...
+					if (y >= _displayclipy1) {
+						uint16_t * pfbPixel = pfbPixel_row;
+						for (xc=0; xc < 5; xc++) {
+							if (glcdfont[c * 5 + xc] & mask) {
+								color = fgcolor;
+							} else {
+								color = bgcolor;
+							}
+							for (xr=0; xr < size_x; xr++) {
+								if ((x >= _displayclipx1) && (x < _displayclipx2)) {
+									*pfbPixel = color;
+								}
+								pfbPixel++;
+								x++;
+							}
+						}
+						for (xr=0; xr < size_x; xr++) {
+							if ((x >= _displayclipx1) && (x < _displayclipx2)) {
+								*pfbPixel = bgcolor;
+							}
+							pfbPixel++;
+							x++;
+						}
+					}
+					pfbPixel_row += _width; // setup pointer to
+					y++;
+				}
+				mask = mask << 1;
+			}
+
+		} else
+#endif
+        {
+            // need to build actual pixel rectangle we will output into.
+            int16_t y_char_top = y;	// remember the y
+            int16_t w =  6 * size_x;
+            int16_t h = 8 * size_y;
+
+            if(x < _displayclipx1) {	w -= (_displayclipx1-x); x = _displayclipx1; 	}
+            if((x + w - 1) >= _displayclipx2)  w = _displayclipx2  - x;
+            if(y < _displayclipy1) {	h -= (_displayclipy1 - y); y = _displayclipy1; 	}
+            if((y + h - 1) >= _displayclipy2) h = _displayclipy2 - y;
+
+        }
     }
 }
 
+void ST7735_t3::setFont(const ILI9341_t3_font_t &f) {
+    font = &f;
+    _gfx_last_char_x_write = 0;	// Don't use cached data here
+    if (gfxFont) {
+        cursor_y -= 6;
+        gfxFont = NULL;
+    }
+    fontbpp = 1;
+    // Calculate additional metrics for Anti-Aliased font support (BDF extn v2.3)
+    if (font && font->version==23){
+        fontbpp = (font->reserved & 0b000011)+1;
+        fontbppindex = (fontbpp >> 2)+1;
+        fontbppmask = (1 << (fontbppindex+1))-1;
+        fontppb = 8/fontbpp;
+        fontalphamx = 31/((1<<fontbpp)-1);
+        // Ensure text and bg color are different. Note: use setTextColor to set actual bg color
+        if (textcolor == textbgcolor) textbgcolor = (textcolor==0x0000)?0xFFFF:0x0000;
+    }
+}
 
 // Maybe support GFX Fonts as well?
 void ST7735_t3::setFont(const GFXfont *f) {
-    //font = NULL;	// turn off the other font...
+    font = NULL;	// turn off the other font...
     _gfx_last_char_x_write = 0;	// Don't use cached data here
     if (f == gfxFont) return;	// same font or lack of so can bail.
 
@@ -1048,12 +1738,43 @@ void ST7735_t3::setFont(const GFXfont *f) {
 
         // Test wondering high and low of Ys here...
         int8_t miny_offset = 0;
+#if 1
         for (uint8_t i=0; i <= (f->last - f->first); i++) {
             if (f->glyph[i].yOffset < miny_offset) {
                 miny_offset = f->glyph[i].yOffset;
             }
         }
-
+#else
+        int max_delta = 0;
+        uint8_t index_min = 0;
+        uint8_t index_max = 0;
+        int8_t minx_offset = 127;
+        int8_t maxx_overlap = 0;
+        uint8_t indexx_min = 0;
+        uint8_t indexx_max = 0;
+        for (uint8_t i=0; i <= (f->last - f->first); i++) {
+        	if (f->glyph[i].yOffset < miny_offset) {
+        		miny_offset = f->glyph[i].yOffset;
+        		index_min = i;
+        	}
+        	if (f->glyph[i].xOffset < minx_offset) {
+        		minx_offset = f->glyph[i].xOffset;
+        		indexx_min = i;
+        	}
+        	if ( (f->glyph[i].yOffset + f->glyph[i].height) > max_delta) {
+        		max_delta = (f->glyph[i].yOffset + f->glyph[i].height);
+        		index_max = i;
+        	}
+        	int8_t x_overlap = f->glyph[i].xOffset + f->glyph[i].width - f->glyph[i].xAdvance;
+        	if (x_overlap > maxx_overlap) {
+        		maxx_overlap = x_overlap;
+        		indexx_max = i;
+        	}
+        }
+        Serial.printf("Set GFX Font(%x): Y: %d %d(%c) %d(%c) X: %d(%c) %d(%c)\n", (uint32_t)f, f->yAdvance,
+        	miny_offset, index_min + f->first, max_delta, index_max + f->first,
+        	minx_offset, indexx_min + f->first, maxx_overlap, indexx_max + f->first);
+#endif
         _gfxFont_min_yOffset = miny_offset;	// Probably only thing we need... May cache?
 
     } else if(gfxFont) { // NULL passed.  Current font struct defined?
@@ -1098,6 +1819,687 @@ static uint32_t fetchbits_signed(const uint8_t *p, uint32_t index, uint32_t requ
         return (int32_t)val - (1 << required);
     }
     return (int32_t)val;
+}
+
+uint32_t ST7735_t3::fetchpixel(const uint8_t *p, uint32_t index, uint32_t x)
+{
+    // The byte
+    uint8_t b = p[index >> 3];
+    // Shift to LSB position and mask to get value
+    uint8_t s = ((fontppb-(x % fontppb)-1)*fontbpp);
+    // Mask and return
+    return (b >> s) & fontbppmask;
+}
+
+void ST7735_t3::drawFontChar(unsigned int c)
+{
+    uint32_t bitoffset;
+    const uint8_t *data;
+
+    //Serial.printf("drawFontChar(%c) %d\n", c, c);
+
+    if (c >= font->index1_first && c <= font->index1_last) {
+        bitoffset = c - font->index1_first;
+        bitoffset *= font->bits_index;
+    } else if (c >= font->index2_first && c <= font->index2_last) {
+        bitoffset = c - font->index2_first + font->index1_last - font->index1_first + 1;
+        bitoffset *= font->bits_index;
+    } else if (font->unicode) {
+        return; // TODO: implement sparse unicode
+    } else {
+        return;
+    }
+    //Serial.printf("  index =  %d\n", fetchbits_unsigned(font->index, bitoffset, font->bits_index));
+    data = font->data + fetchbits_unsigned(font->index, bitoffset, font->bits_index);
+
+    uint32_t encoding = fetchbits_unsigned(data, 0, 3);
+    if (encoding != 0) return;
+    uint32_t width = fetchbits_unsigned(data, 3, font->bits_width);
+    bitoffset = font->bits_width + 3;
+    uint32_t height = fetchbits_unsigned(data, bitoffset, font->bits_height);
+    bitoffset += font->bits_height;
+    //Serial.printf("  size =   %d,%d\n", width, height);
+    //Serial.printf("  line space = %d\n", font->line_space);
+
+
+    int32_t xoffset = fetchbits_signed(data, bitoffset, font->bits_xoffset);
+    bitoffset += font->bits_xoffset;
+    int32_t yoffset = fetchbits_signed(data, bitoffset, font->bits_yoffset);
+    bitoffset += font->bits_yoffset;
+    //Serial.printf("  offset = %d,%d\n", xoffset, yoffset);
+    //Serial.printf("DChar: %c %u, %u, wh:%d %d o:%d %d\n", c, cursor_x, cursor_y, width, height, xoffset, yoffset);
+
+    uint32_t delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
+    bitoffset += font->bits_delta;
+    //Serial.printf("  delta =  %d\n", delta);
+
+    //Serial.printf("  cursor = %d,%d\n", cursor_x, cursor_y);
+
+    //horizontally, we draw every pixel, or none at all
+    if (cursor_x < 0) cursor_x = 0;
+    int32_t origin_x = cursor_x + xoffset;
+    if (origin_x < 0) {
+        cursor_x -= xoffset;
+        origin_x = 0;
+    }
+    if (origin_x + (int)width > _width) {
+        if (!wrap) return;
+        origin_x = 0;
+        if (xoffset >= 0) {
+            cursor_x = 0;
+        } else {
+            cursor_x = -xoffset;
+        }
+        cursor_y += font->line_space;
+    }
+    if(wrap && scrollEnable && isWritingScrollArea && ((origin_x + (int)width) > (scroll_x+scroll_width))){
+        origin_x = 0;
+        if (xoffset >= 0) {
+            cursor_x = scroll_x;
+        } else {
+            cursor_x = -xoffset;
+        }
+        cursor_y += font->line_space;
+    }
+
+    if(scrollEnable && isWritingScrollArea && (cursor_y > (scroll_y+scroll_height - font->cap_height))){
+        scrollTextArea(font->line_space);
+        cursor_y -= font->line_space;
+        cursor_x = scroll_x;
+    }
+    if (cursor_y >= _height) return;
+
+    // vertically, the top and/or bottom can be clipped
+    int32_t origin_y = cursor_y + font->cap_height - height - yoffset;
+    //Serial.printf("  origin = %d,%d\n", origin_x, origin_y);
+
+    // TODO: compute top skip and number of lines
+    int32_t linecount = height;
+    //uint32_t loopcount = 0;
+    int32_t y = origin_y;
+    bool opaque = (textbgcolor != textcolor);
+
+    // Going to try a fast Opaque method which works similar to drawChar, which is near the speed of writerect
+    if (!opaque) {
+
+        // Anti-alias support
+        if (fontbpp>1){
+            // This branch should, in most cases, never happen. This is because if an
+            // anti-aliased font is being used, textcolor and textbgcolor should always
+            // be different. Even though an anti-alised font is being used, pixels in this
+            // case will all be solid because pixels are rendered on same colour as themselves!
+            // This won't look very good.
+            bitoffset = ((bitoffset + 7) & (-8)); // byte-boundary
+            uint32_t xp = 0;
+            uint8_t halfalpha = 1<<(fontbpp-1);
+            while (linecount) {
+                uint32_t x = 0;
+                while(x<width) {
+                    // One pixel at a time, either on (if alpha > 0.5) or off
+                    if (fetchpixel(data, bitoffset, xp)>=halfalpha){
+                        Pixel(origin_x + x,y,textcolor);
+                    }
+                    bitoffset += fontbpp;
+                    x++;
+                    xp++;
+                }
+                y++;
+                linecount--;
+            }
+
+        }
+            // Soild pixels
+        else{
+
+            while (linecount > 0) {
+                //Serial.printf("    linecount = %d\n", linecount);
+                uint32_t n = 1;
+                if (fetchbit(data, bitoffset++) != 0) {
+                    n = fetchbits_unsigned(data, bitoffset, 3) + 2;
+                    bitoffset += 3;
+                }
+                uint32_t x = 0;
+                do {
+                    int32_t xsize = width - x;
+                    if (xsize > 32) xsize = 32;
+                    uint32_t bits = fetchbits_unsigned(data, bitoffset, xsize);
+                    //Serial.printf("    multi line %d %d %x\n", n, x, bits);
+                    drawFontBits(opaque, bits, xsize, origin_x + x, y, n);
+                    bitoffset += xsize;
+                    x += xsize;
+                } while (x < width);
+
+
+                y += n;
+                linecount -= n;
+                //if (++loopcount > 100) {
+                //Serial.println("     abort draw loop");
+                //break;
+                //}
+            }
+        } // 1bpp
+    }
+
+        // opaque
+    else {
+        // Now opaque mode...
+        // Now write out background color for the number of rows above the above the character
+        // figure out bounding rectangle...
+        // In this mode we need to update to use the offset and bounding rectangles as we are doing it it direct.
+        // also update the Origin
+        int cursor_x_origin = cursor_x + _originx;
+        int cursor_y_origin = cursor_y + _originy;
+        origin_x += _originx;
+        origin_y += _originy;
+
+        int start_x = (origin_x < cursor_x_origin) ? origin_x : cursor_x_origin;
+        if (start_x < 0) start_x = 0;
+
+        int start_y = (origin_y < cursor_y_origin) ? origin_y : cursor_y_origin;
+        if (start_y < 0) start_y = 0;
+        int end_x = cursor_x_origin + delta;
+        if ((origin_x + (int)width) > end_x)
+            end_x = origin_x + (int)width;
+        if (end_x >= _displayclipx2)  end_x = _displayclipx2;
+        int end_y = cursor_y_origin + font->line_space;
+        if ((origin_y + (int)height) > end_y)
+            end_y = origin_y + (int)height;
+        if (end_y >= _displayclipy2) end_y = _displayclipy2;
+        end_x--;	// setup to last one we draw
+        end_y--;
+        int start_x_min = (start_x >= _displayclipx1) ? start_x : _displayclipx1;
+        int start_y_min = (start_y >= _displayclipy1) ? start_y : _displayclipy1;
+
+        // See if anything is in the display area.
+        if((end_x < _displayclipx1) ||(start_x >= _displayclipx2) || (end_y < _displayclipy1) || (start_y >= _displayclipy2)) {
+            cursor_x += delta;	// could use goto or another indent level...
+            return;
+        }
+/*
+		Serial.printf("drawFontChar(%c) %d\n", c, c);
+		Serial.printf("  size =   %d,%d\n", width, height);
+		Serial.printf("  line space = %d\n", font->line_space);
+		Serial.printf("  offset = %d,%d\n", xoffset, yoffset);
+		Serial.printf("  delta =  %d\n", delta);
+		Serial.printf("  cursor = %d,%d\n", cursor_x, cursor_y);
+		Serial.printf("  origin = %d,%d\n", origin_x, origin_y);
+		Serial.printf("  Bounding: (%d, %d)-(%d, %d)\n", start_x, start_y, end_x, end_y);
+		Serial.printf("  mins (%d %d),\n", start_x_min, start_y_min);
+*/
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+        if (_use_fbtft) {
+			uint16_t * pfbPixel_row = &_pfbtft[ start_y*_width + start_x];
+			uint16_t * pfbPixel;
+			int screen_y = start_y;
+			int screen_x;
+
+			// Clear above character
+			while (screen_y < origin_y) {
+				pfbPixel = pfbPixel_row;
+				// only output if this line is within the clipping region.
+				if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+					for (screen_x = start_x; screen_x <= end_x; screen_x++) {
+						if (screen_x >= _displayclipx1) {
+							*pfbPixel = textbgcolor;
+						}
+						pfbPixel++;
+					}
+				}
+				screen_y++;
+				pfbPixel_row += _width;
+			}
+
+			// Anti-aliased font
+			if (fontbpp>1){
+				screen_y = origin_y;
+				bitoffset = ((bitoffset + 7) & (-8)); // byte-boundary
+				uint32_t xp = 0;
+				int glyphend_x = origin_x+width;
+				while (linecount) {
+					pfbPixel = pfbPixel_row;
+					screen_x = start_x;
+					while(screen_x<=end_x) {
+						// XXX: I'm sure clipping could be done way more efficiently than just chekcing every single pixel, but let's just get this going
+						if ((screen_x >= _displayclipx1) && (screen_x < _displayclipx2) && (screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+							// Clear before or after pixel
+							if ((screen_x<origin_x) || (screen_x>=glyphend_x)){
+								*pfbPixel = textbgcolor;
+							}
+							// Draw alpha-blended character
+							else{
+								uint8_t alpha = fetchpixel(data, bitoffset, xp);
+								*pfbPixel = alphaBlendRGB565Premultiplied( textcolorPrexpanded, textbgcolorPrexpanded, (uint8_t)(alpha * fontalphamx) );
+								bitoffset += fontbpp;
+								xp++;
+							}
+						} // clip
+						screen_x++;
+						pfbPixel++;
+					}
+					pfbPixel_row += _width;
+					screen_y++;
+					linecount--;
+				}
+
+			} // anti-aliased
+
+			// 1bpp solid font
+			else{
+
+				// Now lets process each of the data lines (draw character)
+				screen_y = origin_y;
+				while (linecount > 0) {
+					//Serial.printf("    linecount = %d\n", linecount);
+					uint32_t b = fetchbit(data, bitoffset++);
+					uint32_t n;
+					if (b == 0) {
+						//Serial.println("Single");
+						n = 1;
+					} else {
+						//Serial.println("Multi");
+						n = fetchbits_unsigned(data, bitoffset, 3) + 2;
+						bitoffset += 3;
+					}
+					uint32_t bitoffset_row_start = bitoffset;
+					while (n--) {
+						pfbPixel = pfbPixel_row;
+
+						// Clear to left
+						if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+							bitoffset = bitoffset_row_start;	// we will work through these bits maybe multiple times
+							for (screen_x = start_x; screen_x < origin_x; screen_x++) {
+								if (screen_x >= _displayclipx1) {
+									*pfbPixel = textbgcolor;
+								} // make sure not clipped
+								pfbPixel++;
+							}
+						}
+
+						// Pixel bits
+						screen_x = origin_x;
+						uint32_t x = 0;
+						do {
+							uint32_t xsize = width - x;
+							if (xsize > 32) xsize = 32;
+							uint32_t bits = fetchbits_unsigned(data, bitoffset, xsize);
+							uint32_t bit_mask = 1 << (xsize-1);
+							//Serial.printf(" %d %d %x %x\n", x, xsize, bits, bit_mask);
+							if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+								while (bit_mask && (screen_x <= end_x)) {
+									if ((screen_x >= _displayclipx1) && (screen_x < _displayclipx2)) {
+										*pfbPixel = (bits & bit_mask) ? textcolor : textbgcolor;
+									}
+									pfbPixel++;
+									bit_mask = bit_mask >> 1;
+									screen_x++;	// increment our pixel position.
+								}
+							}
+								bitoffset += xsize;
+							x += xsize;
+						} while (x < width);
+
+						// Clear to right
+						if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+							// output bg color and right hand side
+							while (screen_x++ <= end_x) {
+								*pfbPixel++ = textbgcolor;
+							}
+						}
+			 			screen_y++;
+						pfbPixel_row += _width;
+						linecount--;
+					}
+				}
+
+			} // 1bpp
+
+			// clear below character
+	 		while (screen_y++ <= end_y) {
+				if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+					pfbPixel = pfbPixel_row;
+					for (screen_x = start_x; screen_x <= end_x; screen_x++) {
+						if (screen_x >= _displayclipx1) {
+							*pfbPixel = textbgcolor;
+						}
+						pfbPixel++;
+					}
+				}
+				pfbPixel_row += _width;
+			}
+
+		} else
+#endif
+        {
+
+
+            int screen_y = start_y_min;
+            int screen_x;
+
+            // Clear above character
+            while (screen_y < origin_y) {
+                for (screen_x = start_x_min; screen_x <= end_x; screen_x++) {
+                    // writedata16(textbgcolor);
+                }
+                screen_y++;
+            }
+
+            // Anti-aliased font
+            if (fontbpp>1){
+                screen_y = origin_y;
+                bitoffset = ((bitoffset + 7) & (-8)); // byte-boundary
+                int glyphend_x = origin_x+width;
+                uint32_t xp = 0;
+                while (linecount) {
+                    screen_x = start_x;
+                    while(screen_x<=end_x) {
+                        // XXX: I'm sure clipping could be done way more efficiently than just chekcing every single pixel, but let's just get this going
+                        if ((screen_x >= _displayclipx1) && (screen_x < _displayclipx2) && (screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+                            // Clear before or after pixel
+                            if ((screen_x<origin_x) || (screen_x>=glyphend_x)){
+                                writedata16(textbgcolor);
+                            }
+                                // Draw alpha-blended character
+                            else{
+                                uint8_t alpha = fetchpixel(data, bitoffset, xp);
+                                writedata16( alphaBlendRGB565Premultiplied( textcolorPrexpanded, textbgcolorPrexpanded, (uint8_t)(alpha * fontalphamx) ) );
+                                bitoffset += fontbpp;
+                                xp++;
+                            }
+                        } // clip
+                        screen_x++;
+                    }
+                    screen_y++;
+                    linecount--;
+                }
+
+            } // anti-aliased
+
+                // 1bpp
+            else{
+
+                // Now lets process each of the data lines.
+                screen_y = origin_y;
+                while (linecount > 0) {
+                    //Serial.printf("    linecount = %d\n", linecount);
+                    uint32_t b = fetchbit(data, bitoffset++);
+                    uint32_t n;
+                    if (b == 0) {
+                        //Serial.println("    Single");
+                        n = 1;
+                    } else {
+                        //Serial.println("    Multi");
+                        n = fetchbits_unsigned(data, bitoffset, 3) + 2;
+                        bitoffset += 3;
+                    }
+                    uint32_t bitoffset_row_start = bitoffset;
+                    while (n--) {
+                        // do some clipping here.
+                        bitoffset = bitoffset_row_start;	// we will work through these bits maybe multiple times
+                        // We need to handle case where some of the bits may not be visible, but we still need to
+                        // read through them
+                        //Serial.printf("y:%d  %d %d %d %d\n", screen_y, start_x, origin_x, _displayclipx1, _displayclipx2);
+                        if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+                            for (screen_x = start_x; screen_x < origin_x; screen_x++) {
+                                if ((screen_x >= _displayclipx1) && (screen_x < _displayclipx2)) {
+                                    //Serial.write('-');
+                                    writedata16(textbgcolor);
+                                }
+                            }
+                        }
+                        uint32_t x = 0;
+                        screen_x = origin_x;
+                        do {
+                            uint32_t xsize = width - x;
+                            if (xsize > 32) xsize = 32;
+                            uint32_t bits = fetchbits_unsigned(data, bitoffset, xsize);
+                            uint32_t bit_mask = 1 << (xsize-1);
+                            //Serial.printf("     %d %d %x %x - ", x, xsize, bits, bit_mask);
+                            if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+                                while (bit_mask) {
+                                    if ((screen_x >= _displayclipx1) && (screen_x < _displayclipx2)) {
+                                        writedata16((bits & bit_mask) ? textcolor : textbgcolor);
+                                        //Serial.write((bits & bit_mask) ? '*' : '.');
+                                    }
+                                    bit_mask = bit_mask >> 1;
+                                    screen_x++ ; // Current actual screen X
+                                }
+                                //Serial.println();
+                                bitoffset += xsize;
+                            }
+                            x += xsize;
+                        } while (x < width) ;
+                        if ((screen_y >= _displayclipy1) && (screen_y < _displayclipy2)) {
+                            // output bg color and right hand side
+                            while (screen_x++ <= end_x) {
+                                writedata16(textbgcolor);
+                                //Serial.write('+');
+                            }
+                            //Serial.println();
+                        }
+                        screen_y++;
+                        linecount--;
+                    }
+                }
+            } // 1bpp
+
+            // clear below character - note reusing xcreen_x for this
+            screen_x = (end_y + 1 - screen_y) * (end_x + 1 - start_x_min); // How many bytes we need to still output
+            //Serial.printf("Clear Below: %d\n", screen_x);
+            while (screen_x-- > 1) {
+                writedata16(textbgcolor);
+            }
+            writedata16_last(textbgcolor);
+        }
+
+    }
+    // Increment to setup for the next character.
+    cursor_x += delta;
+
+}
+
+//strPixelLen			- gets pixel length of given ASCII string
+int16_t ST7735_t3::strPixelLen(const char * str)
+{
+//	//Serial.printf("strPixelLen %s\n", str);
+    if (!str) return(0);
+    if (gfxFont)
+    {
+        // BUGBUG:: just use the other function for now... May do this for all of them...
+        int16_t x, y;
+        uint16_t w, h;
+        getTextBounds(str, cursor_x, cursor_y, &x, &y, &w, &h);
+        return w;
+    }
+
+    uint16_t len=0, maxlen=0;
+    while (*str)
+    {
+        if (*str=='\n')
+        {
+            if ( len > maxlen )
+            {
+                maxlen=len;
+                len=0;
+            }
+        }
+        else
+        {
+            if (!font)
+            {
+                len+=textsize_x*6;
+            }
+            else
+            {
+
+                uint32_t bitoffset;
+                const uint8_t *data;
+                uint16_t c = *str;
+
+//				//Serial.printf("char %c(%d)\n", c,c);
+
+                if (c >= font->index1_first && c <= font->index1_last) {
+                    bitoffset = c - font->index1_first;
+                    bitoffset *= font->bits_index;
+                } else if (c >= font->index2_first && c <= font->index2_last) {
+                    bitoffset = c - font->index2_first + font->index1_last - font->index1_first + 1;
+                    bitoffset *= font->bits_index;
+                } else if (font->unicode) {
+                    continue;
+                } else {
+                    continue;
+                }
+                //Serial.printf("  index =  %d\n", fetchbits_unsigned(font->index, bitoffset, font->bits_index));
+                data = font->data + fetchbits_unsigned(font->index, bitoffset, font->bits_index);
+
+                uint32_t encoding = fetchbits_unsigned(data, 0, 3);
+                if (encoding != 0) continue;
+//				uint32_t width = fetchbits_unsigned(data, 3, font->bits_screenWidth);
+//				//Serial.printf("  width =  %d\n", width);
+                bitoffset = font->bits_width + 3;
+                bitoffset += font->bits_height;
+
+//				int32_t xoffset = fetchbits_signed(data, bitoffset, font->bits_xoffset);
+//				//Serial.printf("  xoffset =  %d\n", xoffset);
+                bitoffset += font->bits_xoffset;
+                bitoffset += font->bits_yoffset;
+
+                uint32_t delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
+                bitoffset += font->bits_delta;
+//				//Serial.printf("  delta =  %d\n", delta);
+
+                len += delta;//+width-xoffset;
+//				//Serial.printf("  len =  %d\n", len);
+            }
+
+            if ( len > maxlen )
+            {
+                maxlen=len;
+//					//Serial.printf("  maxlen =  %d\n", maxlen);
+            }
+        }
+        str++;
+    }
+//	//Serial.printf("Return  maxlen =  %d\n", maxlen);
+    return( maxlen );
+}
+
+void ST7735_t3::charBounds(char c, int16_t *x, int16_t *y,
+                           int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy) {
+
+    // BUGBUG:: Not handling offset/clip
+    if (font) {
+        if(c == '\n') { // Newline?
+            *x  = 0;    // Reset x to zero, advance y by one line
+            *y += font->line_space;
+        } else if(c != '\r') { // Not a carriage return; is normal char
+            uint32_t bitoffset;
+            const uint8_t *data;
+            if (c >= font->index1_first && c <= font->index1_last) {
+                bitoffset = c - font->index1_first;
+                bitoffset *= font->bits_index;
+            } else if (c >= font->index2_first && c <= font->index2_last) {
+                bitoffset = c - font->index2_first + font->index1_last - font->index1_first + 1;
+                bitoffset *= font->bits_index;
+            } else if (font->unicode) {
+                return; // TODO: implement sparse unicode
+            } else {
+                return;
+            }
+            //Serial.printf("  index =  %d\n", fetchbits_unsigned(font->index, bitoffset, font->bits_index));
+            data = font->data + fetchbits_unsigned(font->index, bitoffset, font->bits_index);
+
+            uint32_t encoding = fetchbits_unsigned(data, 0, 3);
+            if (encoding != 0) return;
+            uint32_t width = fetchbits_unsigned(data, 3, font->bits_width);
+            bitoffset = font->bits_width + 3;
+            uint32_t height = fetchbits_unsigned(data, bitoffset, font->bits_height);
+            bitoffset += font->bits_height;
+            //Serial.printf("  size =   %d,%d\n", width, height);
+            //Serial.printf("  line space = %d\n", font->line_space);
+
+            int32_t xoffset = fetchbits_signed(data, bitoffset, font->bits_xoffset);
+            bitoffset += font->bits_xoffset;
+            int32_t yoffset = fetchbits_signed(data, bitoffset, font->bits_yoffset);
+            bitoffset += font->bits_yoffset;
+
+            uint32_t delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
+            bitoffset += font->bits_delta;
+
+            int16_t
+                    x1 = *x + xoffset,
+                    y1 = *y + yoffset,
+                    x2 = x1 + width,
+                    y2 = y1 + height;
+
+            if(wrap && (x2 > _width)) {
+                *x  = 0; // Reset x to zero, advance y by one line
+                *y += font->line_space;
+                x1 = *x + xoffset,
+                y1 = *y + yoffset,
+                x2 = x1 + width,
+                y2 = y1 + height;
+            }
+            if(x1 < *minx) *minx = x1;
+            if(y1 < *miny) *miny = y1;
+            if(x2 > *maxx) *maxx = x2;
+            if(y2 > *maxy) *maxy = y2;
+            *x += delta;	// ? guessing here...
+        }
+    }
+
+    else if(gfxFont) {
+
+        if(c == '\n') { // Newline?
+            *x  = 0;    // Reset x to zero, advance y by one line
+            *y += textsize_y * gfxFont->yAdvance;
+        } else if(c != '\r') { // Not a carriage return; is normal char
+            uint8_t first = gfxFont->first,
+                    last  = gfxFont->last;
+            if((c >= first) && (c <= last)) { // Char present in this font?
+                GFXglyph *glyph  = gfxFont->glyph + (c - first);
+                uint8_t gw = glyph->width,
+                        gh = glyph->height,
+                        xa = glyph->xAdvance;
+                int8_t  xo = glyph->xOffset,
+                        yo = glyph->yOffset + gfxFont->yAdvance/2;
+                if(wrap && ((*x+(((int16_t)xo+gw)*textsize_x)) > _width)) {
+                    *x  = 0; // Reset x to zero, advance y by one line
+                    *y += textsize_y * gfxFont->yAdvance;
+                }
+                int16_t tsx = (int16_t)textsize_x,
+                        tsy = (int16_t)textsize_y,
+                        x1 = *x + xo * tsx,
+                        y1 = *y + yo * tsy,
+                        x2 = x1 + gw * tsx - 1,
+                        y2 = y1 + gh * tsy - 1;
+                if(x1 < *minx) *minx = x1;
+                if(y1 < *miny) *miny = y1;
+                if(x2 > *maxx) *maxx = x2;
+                if(y2 > *maxy) *maxy = y2;
+                *x += xa * tsx;
+            }
+        }
+
+    } else { // Default font
+
+        if(c == '\n') {                     // Newline?
+            *x  = 0;                        // Reset x to zero,
+            *y += textsize_y * 8;           // advance y one line
+            // min/max x/y unchaged -- that waits for next 'normal' character
+        } else if(c != '\r') {  // Normal char; ignore carriage returns
+            if(wrap && ((*x + textsize_x * 6) > _width)) { // Off right?
+                *x  = 0;                    // Reset x to zero,
+                *y += textsize_y * 8;       // advance y one line
+            }
+            int x2 = *x + textsize_x * 6 - 1, // Lower-right pixel of char
+            y2 = *y + textsize_y * 8 - 1;
+            if(x2 > *maxx) *maxx = x2;      // Track max x, y
+            if(y2 > *maxy) *maxy = y2;
+            if(*x < *minx) *minx = *x;      // Track min x, y
+            if(*y < *miny) *miny = *y;
+            *x += textsize_x * 6;             // Advance x one char
+        }
+    }
 }
 
 // Add in Adafruit versions of text bounds calculations.
@@ -1343,7 +2745,182 @@ void ST7735_t3::drawGFXFontChar(unsigned int c) {
         // If we get here and
         if (_gfx_last_cursor_y != (cursor_y + _originy))  _gfx_last_char_x_write = 0;
 
+#ifdef ENABLE_ST77XX_FRAMEBUFFER
+        if (_use_fbtft) {
+			// lets try to output the values directly...
+			uint16_t * pfbPixel_row = &_pfbtft[ y_start *_width + x_start];
+			uint16_t * pfbPixel;
+			// First lets fill in the top parts above the actual rectangle...
+			while (y_top_fill--) {
+				pfbPixel = pfbPixel_row;
+				if ( (y >= _displayclipy1) && (y < _displayclipy2)) {
+					for (int16_t xx = x_start; xx < x_end; xx++) {
+						if ((xx >= _displayclipx1) && (xx >= x_offset_cursor)) {
+							if ((xx >= _gfx_last_char_x_write) || (*pfbPixel != _gfx_last_char_textcolor))
+								*pfbPixel = textbgcolor;
+						}
+						pfbPixel++;
+					}
+				}
+				pfbPixel_row += _width;
+				y++;
+			}
+			// Now lets output all of the pixels for each of the rows..
+			for(yy=0; (yy<h) && (y < _displayclipy2); yy++) {
+				uint16_t bo_save = bo;
+				uint8_t bit_save = bit;
+				uint8_t bits_save = bits;
+				for (uint8_t yts = 0; (yts < textsize_y) && (y < _displayclipy2); yts++) {
+					pfbPixel = pfbPixel_row;
+					// need to repeat the stuff for each row...
+					bo = bo_save;
+					bit = bit_save;
+					bits = bits_save;
+					x = x_start;
+					if (y >= _displayclipy1) {
+						while (x < x_left_fill) {
+							if ( (x >= _displayclipx1) && (x < _displayclipx2)) {
+								if ((x >= _gfx_last_char_x_write) || (*pfbPixel != _gfx_last_char_textcolor))
+									*pfbPixel = textbgcolor;
+							}
+							pfbPixel++;
+							x++;
 
+						}
+				        for(xx=0; xx<w; xx++) {
+				            if(!(bit++ & 7)) {
+				                bits = bitmap[bo++];
+				            }
+				            for (uint8_t xts = 0; xts < textsize_x; xts++) {
+								if ( (x >= _displayclipx1) && (x < _displayclipx2)) {
+				            		if (bits & 0x80)
+				            			*pfbPixel = textcolor;
+				            		else if (x >= x_offset_cursor) {
+										if ((x >= _gfx_last_char_x_write) || (*pfbPixel != _gfx_last_char_textcolor))
+											*pfbPixel = textbgcolor;
+				            		}
+				            	}
+								pfbPixel++;
+				            	x++;	// remember our logical position...
+				            }
+				            bits <<= 1;
+				        }
+				        // Fill in any additional bg colors to right of our output
+				        while (x++ < x_end) {
+							if (x >= _displayclipx1) {
+				        		*pfbPixel = textbgcolor;
+				        	}
+							pfbPixel++;
+				        }
+				    }
+			        y++;	// remember which row we just output
+					pfbPixel_row += _width;
+			    }
+		    }
+		    // And output any more rows below us...
+			while (y < y_end) {
+				if (y >= _displayclipy1) {
+					pfbPixel = pfbPixel_row;
+					for (int16_t xx = x_start; xx < x_end; xx++) {
+						if ((xx >= _displayclipx1) && (xx >= x_offset_cursor)) {
+							if ((xx >= _gfx_last_char_x_write) || (*pfbPixel != _gfx_last_char_textcolor))
+			        			*pfbPixel = textbgcolor;
+			        	}
+						pfbPixel++;
+					}
+				}
+				pfbPixel_row += _width;
+				y++;
+			}
+
+		} else
+#endif
+        {
+            // lets try to output text in one output rectangle
+            //Serial.printf("    SPI (%d %d) (%d %d)\n", x_start, y_start, x_end, y_end);Serial.flush();
+            // compute the actual region we will output given
+
+
+            setAddr((x_start >= _displayclipx1) ? x_start : _displayclipx1,
+                    (y_start >= _displayclipy1) ? y_start : _displayclipy1,
+                    x_end  - 1,  y_end - 1);
+            //writecommand(ST7735_RAMWR);
+            //Serial.printf("SetAddr: %u %u %u %u\n", (x_start >= _displayclipx1) ? x_start : _displayclipx1,
+            //		(y_start >= _displayclipy1) ? y_start : _displayclipy1,
+            //		x_end  - 1,  y_end - 1);
+            // First lets fill in the top parts above the actual rectangle...
+            //Serial.printf("    y_top_fill %d x_left_fill %d\n", y_top_fill, x_left_fill);
+            while (y_top_fill--) {
+                if ( (y >= _displayclipy1) && (y < _displayclipy2)) {
+                    for (int16_t xx = x_start; xx < x_end; xx++) {
+                        if (xx >= _displayclipx1) {
+                            writedata16(gfxFontLastCharPosFG(xx,y)? _gfx_last_char_textcolor : (xx < x_offset_cursor)? _gfx_last_char_textbgcolor : textbgcolor);
+                        }
+                    }
+                }
+                y++;
+            }
+            //Serial.println("    After top fill"); Serial.flush();
+            // Now lets output all of the pixels for each of the rows..
+            for(yy=0; (yy<h) && (y < _displayclipy2); yy++) {
+                uint16_t bo_save = bo;
+                uint8_t bit_save = bit;
+                uint8_t bits_save = bits;
+                for (uint8_t yts = 0; (yts < textsize_y) && (y < _displayclipy2); yts++) {
+                    // need to repeat the stuff for each row...
+                    bo = bo_save;
+                    bit = bit_save;
+                    bits = bits_save;
+                    x = x_start;
+                    if (y >= _displayclipy1) {
+                        while (x < x_left_fill) {
+                            if ( (x >= _displayclipx1) && (x < _displayclipx2) ) {
+                                // Don't need to check if we are in previous char as in this case x_left_fill is set to 0...
+                                writedata16(gfxFontLastCharPosFG(x,y)? _gfx_last_char_textcolor :  textbgcolor);
+                            }
+                            x++;
+                        }
+                        for(xx=0; xx<w; xx++) {
+                            if(!(bit++ & 7)) {
+                                bits = bitmap[bo++];
+                            }
+                            for (uint8_t xts = 0; xts < textsize_x; xts++) {
+                                if ( (x >= _displayclipx1) && (x < _displayclipx2)) {
+                                    if (bits & 0x80)
+                                        writedata16(textcolor);
+                                    else
+                                        writedata16(gfxFontLastCharPosFG(x,y)? _gfx_last_char_textcolor : (x < x_offset_cursor)? _gfx_last_char_textbgcolor : textbgcolor);
+                                }
+                                x++;	// remember our logical position...
+                            }
+                            bits <<= 1;
+                        }
+                        // Fill in any additional bg colors to right of our output
+                        while (x < x_end) {
+                            if (x >= _displayclipx1) {
+                                writedata16(gfxFontLastCharPosFG(x,y)? _gfx_last_char_textcolor : (x < x_offset_cursor)? _gfx_last_char_textbgcolor : textbgcolor);
+                            }
+                            x++;
+                        }
+                    }
+                    y++;	// remember which row we just output
+                }
+            }
+            // And output any more rows below us...
+            //Serial.println("    Bottom fill"); Serial.flush();
+            while (y < y_end) {
+                if (y >= _displayclipy1) {
+                    for (int16_t xx = x_start; xx < x_end; xx++) {
+                        if (xx >= _displayclipx1 ) {
+                            writedata16(gfxFontLastCharPosFG(xx,y)? _gfx_last_char_textcolor : (xx < x_offset_cursor)? _gfx_last_char_textbgcolor : textbgcolor);
+                        }
+                    }
+                }
+                y++;
+            }
+            //writecommand_last(ST7735_NOP);
+            //endSPITransaction();
+        }
         // Save away info about this last char
         _gfx_c_last = c;
         _gfx_last_cursor_x = cursor_x + _originx;
