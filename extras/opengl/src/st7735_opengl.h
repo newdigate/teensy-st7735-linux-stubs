@@ -46,7 +46,7 @@ public:
 
     }
     virtual int write(uint8_t b) {
-
+        return 0;
     }
 };
 

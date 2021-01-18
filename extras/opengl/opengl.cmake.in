@@ -1,6 +1,13 @@
 find_package(teensy_x86_stubs)
 include_directories(${teensy_x86_stubs_INCLUDE_DIR})
 
+
+find_package(teensy_x86_stubs)
+include_directories(${teensy_x86_stubs_INCLUDE_DIR})
+
+find_package(teensy_st7735_linux_stubs)
+include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
+
 #brew install pkg-config
 find_package(PkgConfig REQUIRED)
 

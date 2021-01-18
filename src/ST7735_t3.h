@@ -92,7 +92,7 @@ typedef struct {
 #define st7735_swap(a, b) { typeof(a) t = a; a = b; b = t; }
 #endif
 
-#ifdef __cplusplus
+
 
 #define CL(_r,_g,_b) ((((_r)&0xF8)<<8)|(((_g)&0xFC)<<3)|((_b)>>3))
 
@@ -112,13 +112,11 @@ typedef struct {
 //#define L_BASELINE  9 // Left character baseline (Line the 'A' character would sit on)
 //#define C_BASELINE 10 // Centre character baseline
 //#define R_BASELINE 11 // Right character baseline
+#ifdef __cplusplus
 
-bool ST7735_min(uint16_t a, uint16_t b) {
-    return (a < b)? a : b;
-}
-bool ST7735_max(uint16_t a, uint16_t b) {
-    return (a > b)? a : b;
-}
+#define ST7735_min(a, b) ((a < b)? a : b )
+#define ST7735_max(a, b) ((a > b)? a : b )
+
 class ST7735_t3 : public Print
 {
 
