@@ -170,15 +170,17 @@ public:
 
 
 
-        textureImage = new u_char[128*128*4] {255};
+        textureImage = new u_char[128*128*4] {0};
 
 
         for (int i = 0; i < 128; i++) {
             for (int j = 0; j < 128; j++) {
-                textureImage[i*(128*4) + (j*4)] = 255;
-                textureImage[i*(128*4)+ (j*4)+1] = i*2;
-                textureImage[i*(128*4) + (j*4)+2] = j*2;
-                textureImage[i*(128*4)+ (j*4)+3] = 255;
+                if (j % 2 == 0) {
+                    textureImage[i * (128 * 4) + (j * 4)] = 255;
+                    textureImage[i * (128 * 4) + (j * 4) + 1] = i * 2;
+                    textureImage[i * (128 * 4) + (j * 4) + 2] = j * 2;
+                    textureImage[i * (128 * 4) + (j * 4) + 3] = 255;
+                }
             }
         }
 
