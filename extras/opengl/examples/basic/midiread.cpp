@@ -27,6 +27,9 @@ int main() {
     tft.fillScreen(ST7735_BLACK);
     tft.setCursor(0,0);
     tft.println("connected to APC40...");
+    while(!tft.shouldClose()) {
+        tft.loop();
+    }
 }
 
 unsigned __exidx_start;
