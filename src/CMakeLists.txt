@@ -15,6 +15,7 @@ set(SOURCE_FILES
 		ST7735_t3.cpp)
 
 set(HEADER_FILES
+		ILI9341_fonts.h
 		ST7735_t3.h)
 
 add_library(teensy_st7735_linux_stubs SHARED STATIC ${HEADER_FILES} ${SOURCE_FILES})
