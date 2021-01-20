@@ -6,7 +6,7 @@ experimental library for developing visual components for st7735 display...
 be cautious: work-in-progress!!! 
 
 ## structure
-* **[src](src)**: agnostic stub classes for st7735_t3 library to compile on linux.
+* **[src](src)**: core classes for st7735_t3 library to compile on linux.
 * **[extras/opengl](extras/opengl)**: crude emulator of st7735_t3 library using opengl framebuffer
 
 ## examples
