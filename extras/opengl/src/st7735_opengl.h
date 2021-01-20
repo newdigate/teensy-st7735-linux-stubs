@@ -12,6 +12,7 @@
 #include <OpenGL/gl3.h>
 #else
 #include <GL/gl.h>
+#include <GL/glew.h>
 #endif
 static const char* vertexShaderCode = R"glsl(
 #version 330 core
