@@ -23,7 +23,7 @@ jobs:
           path: teensy-x86-stubs
 
       - name: download dependencies
-        run: sudo apt-get update && sudo apt-get install -yq libglfw3 X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread freetype
+        run: sudo apt-get update && sudo apt-get install -yq libglfw3 libglu1-mesa-dev freeglut3-dev mesa-common-dev libx11-dev
 
       - name: Make and Install Dependencies
         run: |
