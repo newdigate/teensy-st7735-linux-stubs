@@ -220,6 +220,8 @@ void mediabuttons() {
 }
 
 int main() {
+    initialize_mock_arduino();
+
     tft.initR(INITR_GREENTAB);
 //    tft.setRotation(3);
 
@@ -274,9 +276,9 @@ int main() {
     Serial.print("done\n\n");
     delay(1000);
     tft.loop();
-    //while(!tft.shouldClose()) {
-    //    tft.loop();
-    //}
+    while(!tft.shouldClose()) {
+        tft.loop();
+    }
 }
 
 unsigned __exidx_start;
