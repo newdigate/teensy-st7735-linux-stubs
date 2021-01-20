@@ -203,19 +203,7 @@ void ST7735_t3::drawPixel(int16_t x, int16_t y, uint16_t color)
 
     if((x < _displayclipx1) ||(x >= _displayclipx2) || (y < _displayclipy1) || (y >= _displayclipy2)) return;
 
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (_use_fbtft) {
-		_pfbtft[y*_width + x] = color;
-
-	} else
-#endif
-    {
-        beginSPITransaction();
-        setAddr(x,y,x+1,y+1);
-        writecommand(ST7735_RAMWR);
-        writedata16_last(color);
-        endSPITransaction();
-    }
+    Pixel(x,y, color);
 }
 
 
@@ -228,26 +216,7 @@ void ST7735_t3::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
     if(y < _displayclipy1) { h = h - (_displayclipy1 - y); y = _displayclipy1;}
     if((y+h-1) >= _displayclipy2) h = _displayclipy2-y;
     if(h<1) return;
-
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (_use_fbtft) {
-		uint16_t * pfbPixel = &_pfbtft[ y*_width + x];
-		while (h--) {
-			*pfbPixel = color;
-			pfbPixel += _width;
-		}
-	} else
-#endif
-    {
-        beginSPITransaction();
-        setAddr(x, y, x, y+h-1);
-        writecommand(ST7735_RAMWR);
-        while (h-- > 1) {
-            writedata16(color);
-        }
-        writedata16_last(color);
-        endSPITransaction();
-    }
+    VLine(x,y, h, color);
 }
 
 
@@ -262,27 +231,7 @@ void ST7735_t3::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     if((x+w-1) >= _displayclipx2)  w = _displayclipx2-x;
     if (w<1) return;
 
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (_use_fbtft) {
-		if ((x&1) || (w&1)) {
-			uint16_t * pfbPixel = &_pfbtft[ y*_width + x];
-			while (w--) {
-				*pfbPixel++ = color;
-			}
-		} else {
-			// X is even and so is w, try 32 bit writes..
-			uint32_t color32 = (color << 16) | color;
-			uint32_t * pfbPixel = (uint32_t*)((uint16_t*)&_pfbtft[ y*_width + x]);
-			while (w) {
-				*pfbPixel++ = color32;
-				w -= 2;
-			}
-		}
-	} else
-#endif
-    {
-
-    }
+    HLine(x,y,w, color);
 }
 
 void ST7735_t3::fillScreen(uint16_t color)
@@ -304,38 +253,10 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
     if((x + w - 1) >= _displayclipx2)  w = _displayclipx2  - x;
     if((y + h - 1) >= _displayclipy2) h = _displayclipy2 - y;
 
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (_use_fbtft) {
-		if ((x&1) || (w&1)) {
-			uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
-			for (;h>0; h--) {
-				uint16_t * pfbPixel = pfbPixel_row;
-				for (int i = 0 ;i < w; i++) {
-					*pfbPixel++ = color;
-				}
-				pfbPixel_row += _width;
-			}
-		} else {
-			// Horizontal is even number so try 32 bit writes instead
-			uint32_t color32 = (color << 16) | color;
-			uint32_t * pfbPixel_row = (uint32_t *)((uint16_t*)&_pfbtft[ y*_width + x]);
-			w = w/2;	// only iterate half the times
-			for (;h>0; h--) {
-				uint32_t * pfbPixel = pfbPixel_row;
-				for (int i = 0 ;i < w; i++) {
-					*pfbPixel++ = color32;
-				}
-				pfbPixel_row += (_width/2);
-			}
-		}
-	} else
-#endif
-    {
-
-        // TODO: this can result in a very long transaction time
-        // should break this into multiple transactions, even though
-        // it'll cost more overhead, so we don't stall other SPI libs
-    }
+    for (int i=0; i<128; i++)
+        for (int j = 0; j < 128; j++) {
+            Pixel(i,j, color);
+        }
 }
 
 
@@ -349,9 +270,9 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
 
 void ST7735_t3::setRotation(uint8_t m)
 {
-    //Serial.printf("Setting Rotation to %d\n", m);
     beginSPITransaction();
     //writecommand(ST7735_MADCTL);
+
     rotation = m % 4; // can't be higher than 3
     switch (rotation) {
         case 0:
@@ -739,24 +660,6 @@ void ST7735_t3::fillCircleHelper(int16_t x0, int16_t y0, int16_t r,
 void ST7735_t3::drawLine(int16_t x0, int16_t y0,
                          int16_t x1, int16_t y1, uint16_t color)
 {
-    if (y0 == y1) {
-        if (x1 > x0) {
-            drawFastHLine(x0, y0, x1 - x0 + 1, color);
-        } else if (x1 < x0) {
-            drawFastHLine(x1, y0, x0 - x1 + 1, color);
-        } else {
-            drawPixel(x0, y0, color);
-        }
-        return;
-    } else if (x0 == x1) {
-        if (y1 > y0) {
-            drawFastVLine(x0, y0, y1 - y0 + 1, color);
-        } else {
-            drawFastVLine(x0, y1, y0 - y1 + 1, color);
-        }
-        return;
-    }
-
     bool steep = abs(y1 - y0) > abs(x1 - x0);
     if (steep) {
         st7735_swap(x0, y0);
@@ -1092,11 +995,11 @@ void ST7735_t3::resetScrollBackgroundColor(uint16_t color){
 
 // overwrite functions from class Print:
 
-size_t ST7735_t3::write(uint16_t c) {
+int ST7735_t3::write(uint8_t c) {
     return write(&c, 1);
 }
 
-size_t ST7735_t3::write(const uint16_t *buffer, size_t size)
+int ST7735_t3::write(const uint8_t *buffer, size_t size)
 {
     // Lets try to handle some of the special font centering code that was done for default fonts.
     if (_center_x_text || _center_y_text ) {

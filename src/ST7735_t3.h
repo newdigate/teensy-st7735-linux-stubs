@@ -124,10 +124,10 @@ public:
 
     ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1);
     ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1);
-    ST7735_t3() {};
+
     void     initB(void),                             // for ST7735B displays
-    initR(uint8_t options = INITR_GREENTAB), // for ST7735R
-    setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
+            initR(uint8_t options = INITR_GREENTAB), // for ST7735R
+            setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
             pushColor(uint16_t color, bool last_pixel=false),
             fillScreen(uint16_t color),
             drawPixel(int16_t x, int16_t y, uint16_t color),
@@ -161,8 +161,7 @@ public:
     void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
     void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
-    void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size)
-    { drawChar(x, y, c, color, bg, size, size);}
+    void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) { drawChar(x, y, c, color, bg, size, size);}
 
     static const int16_t CENTER = 9998;
     void setCursor(int16_t x, int16_t y, bool autoCenter=false);
@@ -178,8 +177,8 @@ public:
     bool getTextWrap();
 
     //////
-    virtual size_t write(uint16_t);
-    virtual size_t write(const uint16_t *buffer, size_t size);
+    virtual int write(uint8_t);
+    virtual int write(const uint8_t *buffer, size_t size);
     int16_t getCursorX(void) const { return cursor_x; }
     int16_t getCursorY(void) const { return cursor_y; }
     void setFont(const ILI9341_t3_font_t &f);
@@ -445,14 +444,7 @@ protected:
 #endif
 
     void HLine(int16_t x, int16_t y, int16_t w, uint16_t color)
-    __attribute__((always_inline))
     {
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-        if (_use_fbtft) {
-	  		drawFastHLine(x, y, w, color);
-	  		return;
-	  	}
-#endif
         x+=_originx;
         y+=_originy;
 
@@ -462,9 +454,9 @@ protected:
         if((x+w-1) >= _displayclipx2)  w = _displayclipx2-x;
         if (w<1) return;
 
-        setAddr(x, y, x+w-1, y);
-        //writecommand(ST7735_RAMWR);
-        do { writedata16(color); } while (--w > 0);
+        for (int i = 0; i < w; ++i) {
+            drawPixel(x + i, y, color);
+        }
     }
 
     void VLine(int16_t x, int16_t y, int16_t h, uint16_t color)
@@ -478,9 +470,10 @@ protected:
         if((y+h-1) >= _displayclipy2) h = _displayclipy2-y;
         if(h<1) return;
 
-        setAddr(x, y, x, y+h-1);
-        //writecommand(ST7735_RAMWR);
-        do { writedata16(color); } while (--h > 0);
+        for (int i = 0; i < h; ++i) {
+            drawPixel(x, y+i, color);
+        }
+
     }
 
     /**
