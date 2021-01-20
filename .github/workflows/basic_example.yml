@@ -1,4 +1,4 @@
-name: Ubuntu-x64
+name: basic-example
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
       - 'README.md'
       - 'LICENSE'
       - '.gitignore'
-      - 'examples/**'
       - 'docs/**'
 env:
   BUILD_TYPE: Release
@@ -26,6 +25,8 @@ jobs:
       - name: Make and Install Dependencies
         run: |
           cd teensy-x86-stubs && mkdir cmake-build-$BUILD_TYPE && cd cmake-build-$BUILD_TYPE && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .. && sudo make install
+          cd ../..
+          mkdir cmake-build-$BUILD_TYPE && cd cmake-build-$BUILD_TYPE && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .. && sudo make install
 
       - name: Create Build Environment
         # Some projects don't allow in-source building, so create a separate build directory
@@ -40,7 +41,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        run: cmake $GITHUB_WORKSPACE/extras/opengl/examples/basic -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
       - name: Build
         working-directory: ${{github.workspace}}/build
