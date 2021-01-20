@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include "../../../src/ST7735_t3.h"
-#include "../glfw/glfw3.h"
+#include <GLFW/glfw3.h>
 #include <OpenGL/gl3.h>
 static const char* vertexShaderCode = R"glsl(
 #version 330 core
