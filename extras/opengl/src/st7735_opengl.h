@@ -8,7 +8,11 @@
 #include <iostream>
 #include "../../../src/ST7735_t3.h"
 #include <GLFW/glfw3.h>
+#ifdef __APPLE__
 #include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
 static const char* vertexShaderCode = R"glsl(
 #version 330 core
 layout (location = 0) in vec3 aPos;
