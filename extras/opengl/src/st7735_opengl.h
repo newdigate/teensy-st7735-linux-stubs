@@ -76,7 +76,7 @@ public:
             return;
         }
 
-        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        //glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
 
         /* Make the window's context current */
         glfwMakeContextCurrent(window);
