@@ -1,7 +1,7 @@
 # teensy st7735 linux stubs
 [![Ubuntu-x64](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/Ubuntu-x64/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions)
-* **src**: agnostic stub classes for st7735_t3 library to compile on linux.
-* **extras/opengl**: crude emulator of st7735_t3 library using opengl framebuffer
+* **[src](src)**: agnostic stub classes for st7735_t3 library to compile on linux.
+* **[extras/opengl](extras/opengl)**: crude emulator of st7735_t3 library using opengl framebuffer
 
 ![opengl emulator](docs/graphicstest.gif)
 * modified version of [graphicstest.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/graphicstest/graphicstest.ino)
