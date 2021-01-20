@@ -183,7 +183,10 @@ void ST7735_t3::initR(uint8_t options)
 
 void ST7735_t3::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-
+    _windowx0 = x0;
+    _windowy0 = y0;
+    _windowx1 = x1;
+    _windowy1 = y1;
 }
 
 
@@ -253,8 +256,8 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
     if((x + w - 1) >= _displayclipx2)  w = _displayclipx2  - x;
     if((y + h - 1) >= _displayclipy2) h = _displayclipy2 - y;
 
-    for (int i=0; i<128; i++)
-        for (int j = 0; j < 128; j++) {
+    for (int i=x; i < x+w; i++)
+        for (int j = y; j < y+h; j++) {
             Pixel(i,j, color);
         }
 }

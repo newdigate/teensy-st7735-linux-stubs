@@ -301,6 +301,11 @@ public:
 protected:
     uint8_t  tabcolor;
 
+    uint16_t  _windowx0 = 0,
+              _windowy0 = 0,
+              _windowx1 = 128,
+              _windowy1 = 128;
+
     void     spiwrite(uint8_t),
             spiwrite16(uint16_t d),
             writecommand(uint8_t c),
