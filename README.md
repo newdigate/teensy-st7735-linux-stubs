@@ -17,6 +17,15 @@ be cautious: work-in-progress!!!
   
     ![opengl emulator](docs/graphicstest.gif)
 
+## install st7735 linuxs stubs
+``` sh
+> mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
+```
+## install opengl st7735 emulator
+``` sh
+> cd extras/opengl && mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
+```
+
 ## dependencies
 * **[src](src)**
   * teensy-x86-stubs
