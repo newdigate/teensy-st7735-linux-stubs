@@ -26,6 +26,19 @@ be cautious: work-in-progress!!!
 ``` sh
 > cd extras/opengl && mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
 ```
+## usage
+### st7735_t3
+* once installed, add to your CMakeLists.txt
+``` cmake
+find_package(teensy_st7735_linux_stubs)
+include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
+...
+target_link_libraries(your_application ${teensy_st7735_linux_stubs_LIBS})
+```
+* include ST7735.h in your c++ code:
+``` c++
+#include "ST7735_t3.h"
+```
 
 ## dependencies
 * [teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
