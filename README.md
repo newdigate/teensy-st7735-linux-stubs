@@ -23,7 +23,8 @@ be cautious: work-in-progress!!!
 * **[extras/opengl](extras/opengl)**
   * [newdigate/teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
   * [newdigate/teensy-st7735-linux-stubs](https://github.com/newdigate/teensy-st7735-linux-stubs)
-  * Ubuntu: libglfw3, libglfw3-dev, libglu1-mesa-dev, freeglut3-dev, mesa-common-dev, libx11-dev, libxmu-dev, libxi-dev, libgl-dev, libglew-dev,
+  * Ubuntu: 
+    * libglfw3, libglfw3-dev, libglu1-mesa-dev, freeglut3-dev, mesa-common-dev, libx11-dev, libxmu-dev, libxi-dev, libgl-dev, libglew-dev,
   ```sh
     > sudo apt-get install -yq libglfw3 libglfw3-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libx11-dev libxmu-dev libxi-dev libgl-dev libglew-dev
   ```
