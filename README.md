@@ -43,17 +43,19 @@ target_link_libraries(your_application ${teensy_st7735_linux_stubs_LIBS})
 ```
 
 ## dependencies
-* [teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
 ### **[src](src)**
+* [teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
 ### **[extras/opengl](extras/opengl)** 
-  * [teensy-st7735-linux-stubs/src](https://github.com/newdigate/teensy-st7735-linux-stubs/src) (i.e. [src](src))
-  * Ubuntu: 
+* [teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
+* [teensy-st7735-linux-stubs/src](https://github.com/newdigate/teensy-st7735-linux-stubs/src) (i.e. [src](src))
+* Ubuntu specific: 
     * libglfw3, libglfw3-dev, libglu1-mesa-dev, freeglut3-dev, mesa-common-dev, libx11-dev, libxmu-dev, libxi-dev, libgl-dev, libglew-dev,
-  ```sh
-    > sudo apt-get install -yq libglfw3 libglfw3-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libx11-dev libxmu-dev libxi-dev libgl-dev libglew-dev
-  ```
-  * MacOS
+```sh
+> sudo apt-get install -yq libglfw3 libglfw3-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libx11-dev libxmu-dev libxi-dev libgl-dev libglew-dev
+```
+* MacOS specific
     * glfw, glew
-    ```sh
-    > brew install glfw
-    > brew install glew
+```sh
+> brew install glfw
+> brew install glew
+```
