@@ -8,8 +8,8 @@ experimental library for developing visual components for st7735 display...
 be cautious: work-in-progress!!! 
 
 ## structure
-* **[src](src)**: core classes for st7735_t3 library to compile on linux.
-* **[extras/opengl](extras/opengl)**: crude emulator of st7735_t3 library using opengl framebuffer
+* **[src](src)**: abstract st7735_t3 class for linux.
+* **[extras/opengl](extras/opengl)**: implementation of st7735_t3 using opengl framebuffer
 
 ## examples
 * [extras/opengl/examples/basic](https://github.com/newdigate/teensy-st7735-linux-stubs/tree/main/extras/opengl/examples/basic) 
@@ -22,10 +22,12 @@ be cautious: work-in-progress!!!
 ``` sh
 > mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
 ```
+
 ### opengl st7735 emulator
 ``` sh
 > cd extras/opengl && mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
 ```
+
 ## usage
 ### st7735_t3
 * once installed, add to your CMakeLists.txt
