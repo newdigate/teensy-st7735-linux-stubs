@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 include(../../common.cmake.in)
 include(../../opengl.cmake.in)
 add_executable(basic
-        midiread.cpp
+        graphicstest.cpp
         ../../src/st7735_opengl.cpp)
 target_link_libraries(basic ${teensy_x86_stubs_LIBS})
 target_link_libraries(basic ${teensy_st7735_linux_stubs_LIBS})
