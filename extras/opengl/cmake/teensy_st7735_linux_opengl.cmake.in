@@ -1,0 +1,9 @@
+set(teensy_st7735_linux_extras_opengl_VERSION "@teensy_st7735_linux_extras_opengl_VERSION@")
+set(teensy_st7735_linux_extras_opengl_LIBS teensy_st7735_linux_extras_opengl -L@LIB_INSTALL_DIR@)
+
+@PACKAGE_INIT@
+
+set_and_check(teensy_st7735_linux_extras_opengl_INCLUDE_DIR "@INCLUDE_INSTALL_DIR@")
+set_and_check(teensy_st7735_linux_extras_opengl_LIB_DIR "@LIB_INSTALL_DIR@")
+
+check_required_components(teensy_st7735_linux_extras_opengl)
