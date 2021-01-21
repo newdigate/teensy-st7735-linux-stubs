@@ -42,6 +42,49 @@ target_link_libraries(your_application ${teensy_st7735_linux_stubs_LIBS})
 #include "ST7735_t3.h"
 ```
 
+### opengl st7735_t3
+* once installed, add to your CMakeLists.txt
+``` cmake
+find_package(teensy_st7735_linux_opengl)
+include_directories(${teensy_st7735_linux_opengl_INCLUDE_DIR})
+...
+target_link_libraries(your_application ${teensy_st7735_linux_opengl_LIBS})
+```
+* include st7735_opengl.h in your c++ code:
+``` c++
+#include "st7735_opengl.h"
+#include "st7735_opengl.h"
+st7735_opengl tft = st7735_opengl();
+
+void testlines(uint16_t color) {
+    tft.fillScreen(ST7735_BLACK);
+    tft.loop();
+    for (int16_t x=0; x < tft.width(); x+=6) {
+        tft.drawLine(0, 0, x, tft.height()-1, color);
+        tft.loop();
+        delay(200);
+}
+
+int main() {
+    initialize_mock_arduino();
+    testlines(ST7735_RED);
+    
+    // keep window open until user closes 
+    while(!tft.shouldClose()) {
+        tft.loop();
+    }
+}
+```
+* 
+
+_LIBS})
+```
+* include ST7735.h in your c++ code:
+``` c++
+#include "ST7735_t3.h"
+```
+
+
 ## dependencies
 ### **[src](src)**
 * [teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
