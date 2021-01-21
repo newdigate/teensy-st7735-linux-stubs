@@ -17,21 +17,21 @@ be cautious: work-in-progress!!!
   
     ![opengl emulator](docs/graphicstest.gif)
 
-## install st7735 linuxs stubs
+## installation
+### st7735_t3 class
 ``` sh
 > mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
 ```
-## install opengl st7735 emulator
+### opengl st7735 emulator
 ``` sh
 > cd extras/opengl && mkdir cmake-build-debug && cd cmake-build-debug && cmake -DCMAKE_BUILD_TYPE=Debug && sudo make install
 ```
 
 ## dependencies
-* **[src](src)**
-  * teensy-x86-stubs
-* **[extras/opengl](extras/opengl)**
-  * [newdigate/teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
-  * [newdigate/teensy-st7735-linux-stubs](https://github.com/newdigate/teensy-st7735-linux-stubs)
+* [teensy-x86-stubs](https://github.com/newdigate/teensy-x86-stubs)
+### **[src](src)**
+### **[extras/opengl](extras/opengl)** 
+  * [teensy-st7735-linux-stubs/src](https://github.com/newdigate/teensy-st7735-linux-stubs/src) (i.e. [src](src))
   * Ubuntu: 
     * libglfw3, libglfw3-dev, libglu1-mesa-dev, freeglut3-dev, mesa-common-dev, libx11-dev, libxmu-dev, libxi-dev, libgl-dev, libglew-dev,
   ```sh
