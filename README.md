@@ -52,7 +52,7 @@ target_link_libraries(your_application ${teensy_st7735_linux_opengl_LIBS})
 ```
 * include st7735_opengl.h in your c++ code:
 ``` c++
-#include "st7735_opengl.h"
+#include "Arduino.h"          // from teensy-x86-stubs
 #include "st7735_opengl.h"
 st7735_opengl tft = st7735_opengl();
 
@@ -63,6 +63,7 @@ void testlines(uint16_t color) {
         tft.drawLine(0, 0, x, tft.height()-1, color);
         tft.loop();
         delay(200);
+    }
 }
 
 int main() {
@@ -75,15 +76,6 @@ int main() {
     }
 }
 ```
-* 
-
-_LIBS})
-```
-* include ST7735.h in your c++ code:
-``` c++
-#include "ST7735_t3.h"
-```
-
 
 ## dependencies
 ### **[src](src)**
