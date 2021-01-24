@@ -4,6 +4,77 @@ st7735_opengl tft = st7735_opengl();
 
 float p = 3.1415926;
 
+void testlines(uint16_t color);
+void testdrawtext(const char *text, uint16_t color);
+void testfastlines(uint16_t color1, uint16_t color2);
+void testdrawrects(uint16_t color);
+void testfillrects(uint16_t color1, uint16_t color2);
+void testfillcircles(uint8_t radius, uint16_t color);
+void testdrawcircles(uint8_t radius, uint16_t color);
+void testtriangles();
+void testroundrects();
+void tftPrintTest();
+void mediabuttons();
+
+int main() {
+    initialize_mock_arduino();
+
+    tft.initR(INITR_GREENTAB);
+//    tft.setRotation(3);
+
+    uint16_t time = millis();
+    tft.fillScreen(ST7735_BLACK);
+    delay(500);
+
+    // large block of text
+    tft.fillScreen(ST7735_BLACK);
+    testdrawtext("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur adipiscing ante sed nibh tincidunt feugiat. Maecenas enim massa, fringilla sed malesuada et, malesuada sit amet turpis. Sed porttitor neque ut ante pretium vitae malesuada nunc bibendum. Nullam aliquet ultrices massa eu hendrerit. Ut sed nisi lorem. In vestibulum purus a tortor imperdiet posuere. ", ST7735_WHITE);
+    delay(1000);
+
+    // tft print function!
+    tftPrintTest();
+    delay(4000);
+
+    // a single pixel
+    tft.drawPixel(tft.width()/2, tft.height()/2, ST7735_GREEN);
+    delay(500);
+
+    // line draw test
+    testlines(ST7735_YELLOW);
+    delay(1000);
+
+    // optimized lines
+    testfastlines(ST7735_RED, ST7735_BLUE);
+    delay(1000);
+
+    testdrawrects(ST7735_GREEN);
+    delay(1000);
+
+    testfillrects(ST7735_YELLOW, ST7735_MAGENTA);
+    delay(1000);
+
+    tft.fillScreen(ST7735_BLACK);
+    testfillcircles(10, ST7735_BLUE);
+    testdrawcircles(10, ST7735_WHITE);
+    delay(500);
+
+    testroundrects();
+    delay(1000);
+
+    testtriangles();
+    delay(1000);
+
+    mediabuttons();
+    delay(500);
+
+    Serial.print("done\n\n");
+    delay(1000);
+    while(!tft.shouldClose()) {
+        tft.update();
+        delay(10);
+    }
+}
+
 void testlines(uint16_t color) {
     tft.fillScreen(ST7735_BLACK);
 
@@ -193,65 +264,6 @@ void mediabuttons() {
     tft.fillRoundRect(69, 98, 20, 45, 5, ST7735_RED);
     // play color
     tft.fillTriangle(42, 20, 42, 60, 90, 40, ST7735_GREEN);
-}
-
-int main() {
-    initialize_mock_arduino();
-
-    tft.initR(INITR_GREENTAB);
-//    tft.setRotation(3);
-
-    uint16_t time = millis();
-    tft.fillScreen(ST7735_BLACK);
-    delay(500);
-
-    // large block of text
-    tft.fillScreen(ST7735_BLACK);
-    testdrawtext("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur adipiscing ante sed nibh tincidunt feugiat. Maecenas enim massa, fringilla sed malesuada et, malesuada sit amet turpis. Sed porttitor neque ut ante pretium vitae malesuada nunc bibendum. Nullam aliquet ultrices massa eu hendrerit. Ut sed nisi lorem. In vestibulum purus a tortor imperdiet posuere. ", ST7735_WHITE);
-    delay(1000);
-
-    // tft print function!
-    tftPrintTest();
-    delay(4000);
-
-    // a single pixel
-    tft.drawPixel(tft.width()/2, tft.height()/2, ST7735_GREEN);
-    delay(500);
-
-    // line draw test
-    testlines(ST7735_YELLOW);
-    delay(1000);
-
-    // optimized lines
-    testfastlines(ST7735_RED, ST7735_BLUE);
-    delay(1000);
-
-    testdrawrects(ST7735_GREEN);
-    delay(1000);
-
-    testfillrects(ST7735_YELLOW, ST7735_MAGENTA);
-    delay(1000);
-
-    tft.fillScreen(ST7735_BLACK);
-    testfillcircles(10, ST7735_BLUE);
-    testdrawcircles(10, ST7735_WHITE);
-    delay(500);
-
-    testroundrects();
-    delay(1000);
-
-    testtriangles();
-    delay(1000);
-
-    mediabuttons();
-    delay(500);
-
-    Serial.print("done\n\n");
-    delay(1000);
-    while(!tft.shouldClose()) {
-        tft.update();
-        delay(10);
-    }
 }
 
 unsigned __exidx_start;
