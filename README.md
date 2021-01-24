@@ -5,7 +5,10 @@
 
 experimental library for developing visual components for st7735 display... 
 
-be cautious: work-in-progress!!! 
+* [structure](#structure)
+* [examples](#examples)
+* [installation](#installation)
+* [dependencies](#dependencies)
 
 ## structure
 * **[src](src)**: abstract st7735_t3 class for linux.
