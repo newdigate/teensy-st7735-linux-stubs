@@ -65,14 +65,15 @@ public:
 
     int write(const uint8_t *buffer, size_t size);
 
-    void loop();
+    void update();
     bool shouldClose();
     // helper to check and display for shader compiler errors
     bool check_shader_compile_status(GLuint obj);
 
 // helper to check and display for shader linker error
     bool check_program_link_status(GLuint obj);
-
+private:
+    long lastUpdate = 0;
 };
 
 

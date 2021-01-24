@@ -4,7 +4,7 @@
 
 #include "st7735_opengl.h"
 
-void st7735_opengl::loop() {
+void st7735_opengl::update() {
     glfwPollEvents();
 
     // use the shader program
@@ -39,6 +39,12 @@ void st7735_opengl::Pixel(int16_t x, int16_t y, uint16_t color) {
     textureImage[ay * (128 * 4) + (x * 4) + 1] = g;
     textureImage[ay * (128 * 4) + (x * 4) + 2] = b;
     textureImage[ay * (128 * 4) + (x * 4) + 3] = 255;
+
+    long milliseconds = millis();
+    if (milliseconds - lastUpdate > 10) {
+        lastUpdate = millis();
+        update();
+    }
 }
 
 int st7735_opengl::write(uint8_t c) {
@@ -282,7 +288,7 @@ st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
 */
 
     //glGenerateMipmap(GL_TEXTURE_2D);
-
+    update();
 }
 
 bool st7735_opengl::shouldClose() {
