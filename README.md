@@ -58,10 +58,8 @@ st7735_opengl tft = st7735_opengl();
 
 void testlines(uint16_t color) {
     tft.fillScreen(ST7735_BLACK);
-    tft.loop();
     for (int16_t x=0; x < tft.width(); x+=6) {
         tft.drawLine(0, 0, x, tft.height()-1, color);
-        tft.loop();
         delay(200);
     }
 }
