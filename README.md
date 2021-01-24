@@ -5,7 +5,10 @@
 
 experimental library for developing visual components for st7735 display... 
 
-be cautious: work-in-progress!!! 
+* [structure](#structure)
+* [examples](#examples)
+* [installation](#installation)
+* [dependencies](#dependencies)
 
 ## structure
 * **[src](src)**: abstract st7735_t3 class for linux.
@@ -58,10 +61,8 @@ st7735_opengl tft = st7735_opengl();
 
 void testlines(uint16_t color) {
     tft.fillScreen(ST7735_BLACK);
-    tft.loop();
     for (int16_t x=0; x < tft.width(); x+=6) {
         tft.drawLine(0, 0, x, tft.height()-1, color);
-        tft.loop();
         delay(200);
     }
 }
