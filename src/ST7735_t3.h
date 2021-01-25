@@ -284,9 +284,9 @@ public:
 #else
     // added support to use optional Frame buffer
     void  setFrameBuffer(uint16_t *frame_buffer) {return;}
-    uint8_t useFrameBuffer(bool b) {return 0;};    // use the frame buffer?  First call will allocate
+    uint8_t useFrameBuffer(bool b) { _useFramebuffer = b; return 0;};    // use the frame buffer?  First call will allocate
     void  freeFrameBuffer(void) {return;}      // explicit call to release the buffer
-    void  updateScreen(void) {return;}       // call to say update the screen now.
+    void  updateScreen(void) { update(); }       // call to say update the screen now.
     bool  updateScreenAsync(bool update_cont = false) {return false;}  // call to say update the screen optinoally turn into continuous mode.
     void  waitUpdateAsyncComplete(void) {return;}
     void  endUpdateAsync() {return;}      // Turn of the continueous mode fla
@@ -299,6 +299,7 @@ public:
 
 
 protected:
+    bool _useFramebuffer = false;
     uint8_t  tabcolor;
 
     uint16_t  _windowx0 = 0,
@@ -306,7 +307,10 @@ protected:
               _windowx1 = 128,
               _windowy1 = 128;
 
-    void     spiwrite(uint8_t),
+    virtual void update() = 0;
+    virtual uint16_t *getFrameBufferPtr() = 0;
+
+    void    spiwrite(uint8_t),
             spiwrite16(uint16_t d),
             writecommand(uint8_t c),
             writecommand_last(uint8_t c),
@@ -393,60 +397,6 @@ protected:
   inline void endSPITransaction()
   {
   }
-
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    // Add support for optional frame buffer
-  uint16_t  *_pfbtft;           // Optional Frame buffer
-  uint8_t   _use_fbtft;         // Are we in frame buffer mode?
-  uint16_t  *_we_allocated_buffer;      // We allocated the buffer;
-  uint32_t  _count_pixels;       // How big is the display in total pixels...
-
-  // Add DMA support.
-  // Note: We have enough memory to have more than one, so could have multiple active devices (one per SPI BUS)
-  //     All three devices have 3 SPI buss so hard coded
-  static  ST7735_t3     *_dmaActiveDisplay[3];  // Use pointer to this as a way to get back to object...
-  volatile uint8_t      _dma_state;         // DMA status
-  volatile uint32_t     _dma_frame_count;   // Can return a frame count...
-
-  #if defined(__MK66FX1M0__)
-  // T3.6 use Scatter/gather with chain to do transfer
-  static DMASetting   _dmasettings[3][4];
-  DMAChannel   _dmatx;
-  uint8_t      _cnt_dma_settings;   // how many do we need for this display?
-  #elif defined(__IMXRT1062__)  // Teensy 4.x
-  static ST7735DMA_Data _dma_data[3];   // one structure for each SPI buss...
-  // try work around DMA memory cached.  So have a couple of buffers we copy frame buffer into
-  // as to move it out of the memory that is cached...
-  volatile    uint32_t _dma_pixel_index = 0;
-  volatile uint16_t _dma_sub_frame_count = 0; // Can return a frame count...
-  uint16_t          _dma_buffer_size;   // the actual size we are using <= DMA_BUFFER_SIZE;
-  uint16_t          _dma_cnt_sub_frames_per_frame;
-  uint32_t      _spi_fcr_save;    // save away previous FCR register value
-
-  #elif defined(__MK64FX512__)
-  // T3.5 - had issues scatter/gather so do just use channels/interrupts
-  // and update and continue
-  uint8_t _cspinmask;
-  volatile uint8_t *_csport = nullptr;
-  DMAChannel   _dmatx;
-  DMAChannel   _dmarx;
-  uint32_t   _dma_count_remaining;
-  uint16_t   _dma_write_size_words;
-  #elif defined(__MK20DX256__)
-  // For first pass maybe emulate T3.5 on SPI...
-  uint8_t _cspinmask;
-  volatile uint8_t *_csport = nullptr;
-  DMAChannel   _dmatx;
-  DMAChannel   _dmarx;
-  uint16_t   _dma_count_remaining;
-  uint16_t   _dma_write_size_words;
-
-  #endif
-  static void dmaInterrupt(void);
-  static void dmaInterrupt1(void);
-  static void dmaInterrupt2(void);
-  void process_dma_interrupt(void);
-#endif
 
     void HLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     {

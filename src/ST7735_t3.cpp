@@ -64,7 +64,7 @@ ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t sid, uint8_t sclk, uint8_t 
 	_we_allocated_buffer = NULL;
 	_dma_state = 0;
 #endif
-    _screenHeight = ST7735_TFTHEIGHT_160;
+    _screenHeight = ST7735_TFTHEIGHT_144;
     _screenWidth = ST7735_TFTWIDTH;
 
     _width = _screenWidth;
@@ -98,7 +98,7 @@ ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t rst)
 	_we_allocated_buffer = NULL;
 	_dma_state = 0;
 #endif
-    _screenHeight = ST7735_TFTHEIGHT_160;
+    _screenHeight = ST7735_TFTHEIGHT_144;
     _screenWidth = ST7735_TFTWIDTH;
 
     cursor_y  = cursor_x    = 0;
@@ -354,8 +354,8 @@ void ST7735_t3::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *p
     y+=_originy;
     //BUGBUG:: Should add some validation of X and Y
 
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (_use_fbtft) {
+    if (_useFramebuffer) {
+        uint16_t * _pfbtft = getFrameBufferPtr();
 		uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
 		for (;h>0; h--) {
 			uint16_t * pfbPixel = pfbPixel_row;
@@ -366,7 +366,6 @@ void ST7735_t3::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *p
 		}
 		return;
 	}
-#endif
 }
 
 // Now lets see if we can writemultiple pixels
@@ -406,8 +405,8 @@ void ST7735_t3::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint
         x_clip_right -= w;
     }
 
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (_use_fbtft) {
+    if (_useFramebuffer) {
+        uint16_t * _pfbtft = getFrameBufferPtr();
 		uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
 		for (;h>0; h--) {
 			uint16_t * pfbPixel = pfbPixel_row;
@@ -421,7 +420,6 @@ void ST7735_t3::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint
 		}
 		return;
 	}
-#endif
 
 }
 
@@ -2713,7 +2711,7 @@ uint8_t ST7735_t3::useFrameBuffer(boolean b)		// use the frame buffer?  First ca
 		if (_pfbtft == NULL) {
 			// Hack to start frame buffer on 32 byte boundary
 			// Note: If called before init maybe larger than we need
-			_we_allocated_buffer = (uint16_t *)malloc(_count_pixels*2+32);
+			x = (uint16_t *)malloc(_count_pixels*2+32);
 			if (_we_allocated_buffer == NULL)
 				return 0;	// failed
 			_pfbtft = (uint16_t*) (((uintptr_t)_we_allocated_buffer + 32) & ~ ((uintptr_t) (31)));

@@ -10,7 +10,7 @@ void st7735_opengl::update() {
     // use the shader program
     glUseProgram(shader_program);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, textureImage);
     // render
     // ------
     glClearColor(0.2f, 0.3f, 1.0f, 1.0f);
@@ -31,19 +31,16 @@ void st7735_opengl::update() {
 }
 
 void st7735_opengl::Pixel(int16_t x, int16_t y, uint16_t color) {
-    byte r = byte(((color & 0xF800) >> 11) << 3);
-    byte g = byte(((color & 0x7E0) >> 5) << 2);
-    byte b = byte(((color & 0x1F)) << 3);
-    int16_t ay = 127 - y;
-    textureImage[ay * (128 * 4) + (x * 4)] = r;
-    textureImage[ay * (128 * 4) + (x * 4) + 1] = g;
-    textureImage[ay * (128 * 4) + (x * 4) + 2] = b;
-    textureImage[ay * (128 * 4) + (x * 4) + 3] = 255;
 
-    long milliseconds = millis();
-    if (milliseconds - lastUpdate > 10) {
-        lastUpdate = millis();
-        update();
+    //int16_t ay = 127 - y;
+    textureImage[y * 128 + x] = color;
+
+    if (!_useFramebuffer) {
+        long milliseconds = millis();
+        if (milliseconds - lastUpdate > 10) {
+            lastUpdate = millis();
+            update();
+        }
     }
 }
 
@@ -226,10 +223,10 @@ st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
 
     float vertices[] = {
             // positions          // colors           // texture coords
-            1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-            1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-            -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-            -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+            1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // top right
+            1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // bottom right
+            -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // bottom left
+            -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left
     };
     unsigned int indices[] = {
             0, 1, 3, // first triangle
@@ -272,20 +269,18 @@ st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // load image, create texture and generate mipmaps
 
-    textureImage = new u_char[128*128*4] {0};
+    textureImage = new uint16_t[128*128] {0};
 
-/*
+        uint16_t count = 0;
         for (int i = 0; i < 128; i++) {
             for (int j = 0; j < 128; j++) {
+                count ++;
                 if (j % 2 == 0) {
-                    textureImage[i * (128 * 4) + (j * 4)] = 255;
-                    textureImage[i * (128 * 4) + (j * 4) + 1] = i * 2;
-                    textureImage[i * (128 * 4) + (j * 4) + 2] = j * 2;
-                    textureImage[i * (128 * 4) + (j * 4) + 3] = 255;
+                    textureImage[i * 128 + j ] = 0xFFFF;
                 }
             }
         }
-*/
+
 
     //glGenerateMipmap(GL_TEXTURE_2D);
     update();

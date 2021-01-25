@@ -12,11 +12,16 @@ set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/teensy_st7735_linux_stubs )
 
 set(SOURCE_FILES
 		glcdfont.c
-		ST7735_t3.cpp)
+		ST7735_t3.cpp
+		st7735_t3_font_Arial.c
+		st7735_t3_font_ComicSansMS.c
+		)
 
 set(HEADER_FILES
 		ILI9341_fonts.h
-		ST7735_t3.h)
+		ST7735_t3.h
+		st7735_t3_font_Arial.h
+		st7735_t3_font_ComicSansMS.h)
 
 add_library(teensy_st7735_linux_stubs SHARED STATIC ${HEADER_FILES} ${SOURCE_FILES})
 

@@ -45,6 +45,7 @@ uniform sampler2D texture1;
 
 void main()
 {
+
 	FragColor = texture(texture1, TexCoord);
 }
 )glsl";
@@ -52,12 +53,11 @@ void main()
 class st7735_opengl : public ST7735_t3 {
 public:
     GLFWwindow *window;
-    u_char *textureImage;
+    uint16_t *textureImage;
     GLuint shader_program, vertex_shader, fragment_shader;
     GLuint texture;
     // vao and vbo handle
     unsigned int VBO, VAO, EBO;
-
     st7735_opengl();
 
     void Pixel(int16_t x, int16_t y, uint16_t color);
@@ -65,7 +65,8 @@ public:
 
     int write(const uint8_t *buffer, size_t size);
 
-    void update();
+    virtual void update();
+    virtual uint16_t *getFrameBufferPtr() { return textureImage; };
     bool shouldClose();
     // helper to check and display for shader compiler errors
     bool check_shader_compile_status(GLuint obj);
