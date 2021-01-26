@@ -3,6 +3,7 @@
 [![ubuntu-opengl](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/ubuntu-opengl/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Aubuntu-opengl)
 [![basic-example](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/basic-example/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Abasic-example)
 [![scrolltest-example](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/scrolltest-example/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Ascrolltest-example)
+[![spitftbitmap-example](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/spitftbitmap-example/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Aspitftbitmap-example)
 
 experimental library for developing visual components for st7735 display... 
 
@@ -26,6 +27,10 @@ experimental library for developing visual components for st7735 display...
   
     ![scrolltest emulator](docs/scrolltest.gif)
 
+* [extras/opengl/examples/spitftbitmap](https://github.com/newdigate/teensy-st7735-linux-stubs/tree/main/extras/opengl/examples/spitftbitmap) 
+  * modified version of [ST7735_t3/examples/spitftbitmap/spitftbitmap.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/spitftbitmap/spitftbitmap.ino)
+  
+    ![spitftbitmap emulator](docs/spitftbitmap.gif)
 ## installation
 ### st7735_t3 class
 ``` sh
