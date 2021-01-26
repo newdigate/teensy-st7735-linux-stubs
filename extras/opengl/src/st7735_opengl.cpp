@@ -270,7 +270,7 @@ st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
     // load image, create texture and generate mipmaps
 
     textureImage = new uint16_t[128*128] {0};
-
+    /*
         uint16_t count = 0;
         for (int i = 0; i < 128; i++) {
             for (int j = 0; j < 128; j++) {
@@ -280,9 +280,7 @@ st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
                 }
             }
         }
-
-
-    //glGenerateMipmap(GL_TEXTURE_2D);
+    */
     update();
 }
 
