@@ -22,7 +22,7 @@ experimental library for developing visual components for st7735 display...
     ![graphicstest emulator](docs/graphicstest.gif)
     
 * [extras/opengl/examples/scrolltest](https://github.com/newdigate/teensy-st7735-linux-stubs/tree/main/extras/opengl/examples/scrolltest) 
-  * modified version of [ST7735_t3/examples/scrolltest/scrolltest.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/scrolltest/scrolltest.ino)
+  * modified version of [ST7735_t3/examples/scrollTest/scrollTest.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/scrollTest/scrollTest.ino)
   
     ![scrolltest emulator](docs/scrolltest.gif)
 
