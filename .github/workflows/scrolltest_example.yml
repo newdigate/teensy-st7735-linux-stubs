@@ -1,4 +1,4 @@
-name: basic-example
+name: scrolltest-example
 
 on:
   push:
