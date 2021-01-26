@@ -1,8 +1,12 @@
 # teensy st7735 linux stubs
 [![Ubuntu-x64](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/Ubuntu-x64/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions)
+
 [![ubuntu-opengl](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/ubuntu-opengl/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Aubuntu-opengl)
+
 [![basic-example](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/basic-example/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Abasic-example)
+
 [![scrolltest-example](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/scrolltest-example/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Ascrolltest-example)
+
 [![spitftbitmap-example](https://github.com/newdigate/teensy-st7735-linux-stubs/workflows/spitftbitmap-example/badge.svg)](https://github.com/newdigate/teensy-st7735-linux-stubs/actions?query=workflow%3Aspitftbitmap-example)
 
 experimental library for developing visual components for st7735 display... 
