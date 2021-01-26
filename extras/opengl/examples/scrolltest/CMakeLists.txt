@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(teensy_st7735_linux_extras_opengl_examples_basic C CXX)
+project(teensy_st7735_linux_extras_opengl_examples_scrolltest C CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 # comment out the line below to reference source, rather than referencing installed libraries (default)
@@ -14,18 +14,16 @@ endif()
 include(../../common.cmake.in)
 include(../../opengl.cmake.in)
 
-set(APP_SOURCES graphicstest.cpp ${ST7735_OPENGL_SOURCES})
+set(APP_SOURCES scrolltest.cpp ${ST7735_OPENGL_SOURCES})
 
 if (NOT DEFINED USE_INSTALLED_ST7735)
     set(APP_SOURCES ${APP_SOURCES} ${ST7735_SOURCES})
 endif()
 
-add_executable(basic  ${APP_SOURCES})
+add_executable(scrolltest  ${APP_SOURCES})
 
-target_link_libraries(basic ${teensy_x86_stubs_LIBS})
+target_link_libraries(scrolltest ${teensy_x86_stubs_LIBS})
 if (DEFINED USE_INSTALLED_ST7735)
-    target_link_libraries(basic ${teensy_st7735_linux_stubs_LIBS})
+    target_link_libraries(scrolltest ${teensy_st7735_linux_stubs_LIBS})
 endif()
-target_link_libraries(basic ${LIBS})
-
-
+target_link_libraries(scrolltest ${LIBS})
