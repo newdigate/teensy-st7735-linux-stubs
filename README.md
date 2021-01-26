@@ -27,6 +27,10 @@ experimental library for developing visual components for st7735 display...
   
     ![scrolltest emulator](docs/scrolltest.gif)
 
+* [extras/opengl/examples/spitftbitmap](https://github.com/newdigate/teensy-st7735-linux-stubs/tree/main/extras/opengl/examples/spitftbitmap) 
+  * modified version of [ST7735_t3/examples/spitftbitmap/spitftbitmap.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/spitftbitmap/spitftbitmap.ino)
+  
+    ![spitftbitmap emulator](docs/spitftbitmap.gif)
 ## installation
 ### st7735_t3 class
 ``` sh
