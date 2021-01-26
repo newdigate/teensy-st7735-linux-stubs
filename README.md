@@ -19,7 +19,12 @@ experimental library for developing visual components for st7735 display...
 * [extras/opengl/examples/basic](https://github.com/newdigate/teensy-st7735-linux-stubs/tree/main/extras/opengl/examples/basic) 
   * modified version of [ST7735_t3/examples/graphicstest/graphicstest.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/graphicstest/graphicstest.ino)
   
-    ![opengl emulator](docs/graphicstest.gif)
+    ![graphicstest emulator](docs/graphicstest.gif)
+    
+* [extras/opengl/examples/scrolltest](https://github.com/newdigate/teensy-st7735-linux-stubs/tree/main/extras/opengl/examples/scrolltest) 
+  * modified version of [ST7735_t3/examples/scrolltest/scrolltest.ino](https://github.com/PaulStoffregen/ST7735_t3/blob/master/examples/scrolltest/scrolltest.ino)
+  
+    ![scrolltest emulator](docs/scrolltest.gif)
 
 ## installation
 ### st7735_t3 class
