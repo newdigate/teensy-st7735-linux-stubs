@@ -3,7 +3,7 @@ project(teensy_st7735_linux_extras_opengl_examples_spitftbitmap C CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 # comment out the line below to reference source, rather than referencing installed libraries (default)
-#set(USE_INSTALLED_ST7735 1)
+set(USE_INSTALLED_ST7735 1)
 
 if (NOT DEFINED USE_INSTALLED_ST7735)
     if (NOT DEFINED teensy_x86_stubs_root)
