@@ -1,5 +1,5 @@
 set(teensy_st7735_linux_extras_opengl_VERSION "@teensy_st7735_linux_extras_opengl_VERSION@")
-set(teensy_st7735_linux_extras_opengl_LIBS teensy_st7735_linux_extras_opengl -L@LIB_INSTALL_DIR@)
+set(teensy_st7735_linux_extras_opengl_LIBS teensy_st7735_linux_opengl -L@LIB_INSTALL_DIR@)
 
 @PACKAGE_INIT@
 

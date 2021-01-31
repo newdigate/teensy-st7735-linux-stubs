@@ -14,6 +14,13 @@ set(SOURCE_FILES
 set(HEADER_FILES
         st7735_opengl.h)
 
+if (NOT DEFINED USE_INSTALLED_ST7735)
+    if (NOT DEFINED teensy_x86_stubs_root)
+        set(teensy_st7735_stubs_root ${CMAKE_SOURCE_DIR}/../../../)
+    endif()
+endif()
+
+include_directories(${teensy_st7735_stubs_root}/src)
 add_library(teensy_st7735_linux_opengl SHARED STATIC ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(teensy_st7735_linux_opengl PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")

@@ -6,7 +6,7 @@
 #define TEENSY_ST7735_LINUX_ST7735_OPENGL_H
 
 #include <iostream>
-#include "../../../src/ST7735_t3.h"
+#include "ST7735_t3.h"
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #define GLFW_INCLUDE_NONE
