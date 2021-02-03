@@ -5,6 +5,13 @@
 #include "st7735_opengl.h"
 
 void st7735_opengl::update() {
+    if (_surpressUpdate) return;
+
+    long milliseconds = millis();
+    if (milliseconds - lastUpdate < 20) {
+        return;
+    }
+    lastUpdate = milliseconds;
     glfwPollEvents();
 
     // use the shader program
@@ -34,14 +41,6 @@ void st7735_opengl::Pixel(int16_t x, int16_t y, uint16_t color) {
 
     //int16_t ay = 127 - y;
     textureImage[y * 128 + x] = color;
-
-    if (!_useFramebuffer) {
-        long milliseconds = millis();
-        if (milliseconds - lastUpdate > 10) {
-            lastUpdate = millis();
-            update();
-        }
-    }
 }
 
 int st7735_opengl::write(uint8_t c) {
@@ -49,6 +48,7 @@ int st7735_opengl::write(uint8_t c) {
 }
 
 int st7735_opengl::write(const uint8_t *buffer, size_t size) {
+    _surpressUpdate = true;
     // Lets try to handle some of the special font centering code that was done for default fonts.
     if (_center_x_text || _center_y_text ) {
         int16_t x, y;
@@ -122,6 +122,8 @@ int st7735_opengl::write(const uint8_t *buffer, size_t size) {
             }
         }
     }
+    _surpressUpdate = false;
+    update();
     return size;
 }
 
@@ -286,4 +288,217 @@ st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
 
 bool st7735_opengl::shouldClose() {
     return glfwWindowShouldClose(window);
+}
+
+void st7735_opengl::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::drawCircle(x0, y0, r, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::drawCircleHelper(x0, y0, r, cornername, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::fillCircle(x0, y0, r, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void
+st7735_opengl::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::fillCircleHelper(x0, y0, r, cornername, delta, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void
+st7735_opengl::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::drawTriangle(x0, y0, x1, y1, x2, y2, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void
+st7735_opengl::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::fillTriangle(x0, y0, x1, y1, x2, y2, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::drawRoundRect(x0, y0, w, h, radius, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::fillRoundRect(x0, y0, w, h, radius, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::drawBitmap(x, y, bitmap, w, h, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
+    ST7735_t3::drawLine(x0, y0, x1, y1, color);
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawRect(x, y, w, h, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x,
+                             uint8_t size_y) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawChar(x, y, c, color, bg, size_x, size_y);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::HLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::HLine(x, y, w, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+void st7735_opengl::VLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::VLine(x, y, h, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::fillScreen(uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::fillScreen(color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawPixel(int16_t x, int16_t y, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawPixel(x, y, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawFastVLine(x, y, h, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::fillRect(x, y, w, h, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawFastHLine(x, y, w, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
 }

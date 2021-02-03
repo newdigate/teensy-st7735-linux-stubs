@@ -273,9 +273,6 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
 
 void ST7735_t3::setRotation(uint8_t m)
 {
-    beginSPITransaction();
-    //writecommand(ST7735_MADCTL);
-
     rotation = m % 4; // can't be higher than 3
     switch (rotation) {
         case 0:
@@ -684,11 +681,6 @@ void ST7735_t3::drawLine(int16_t x0, int16_t y0,
         ystep = -1;
     }
 
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    if (!_use_fbtft) beginSPITransaction();
-#else
-    beginSPITransaction();
-#endif
     int16_t xbegin = x0;
     if (steep) {
         for (; x0<=x1; x0++) {

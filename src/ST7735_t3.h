@@ -128,12 +128,14 @@ public:
     void     initB(void),                             // for ST7735B displays
             initR(uint8_t options = INITR_GREENTAB), // for ST7735R
             setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
-            pushColor(uint16_t color, bool last_pixel=false),
+            pushColor(uint16_t color, bool last_pixel=false);
+    virtual void
             fillScreen(uint16_t color),
             drawPixel(int16_t x, int16_t y, uint16_t color),
             drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
             drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
             fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+
     inline void fillWindow(uint16_t color) {fillScreen(color);}
     virtual void setRotation(uint8_t r);
     void     invertDisplay(bool i);
@@ -149,19 +151,19 @@ public:
     int16_t height(void) const { return _height; }
     uint8_t getRotation(void);
 
-    void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
-    void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
-    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
-    void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
-    void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
-    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
-    void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) { drawChar(x, y, c, color, bg, size, size);}
+    virtual void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    virtual void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
+    virtual void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    virtual void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
+    virtual void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    virtual void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    virtual void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+    virtual void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+    virtual void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
+    virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+    virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    virtual void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
+    virtual void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) { drawChar(x, y, c, color, bg, size, size);}
 
     static const int16_t CENTER = 9998;
     void setCursor(int16_t x, int16_t y, bool autoCenter=false);
@@ -254,34 +256,9 @@ public:
     }
     void setBitrate(uint32_t n);
 
-    /* These are not for current use, 8-bit protocol only!
-    uint8_t  readdata(void),
-             readcommand8(uint8_t);
-    uint16_t readcommand16(uint8_t);
-    uint32_t readcommand32(uint8_t);
-    void     dummyclock(void);
-    */
     // Useful methods added from ili9341_t3
     void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors);
 
-// Frame buffer support
-#ifdef ENABLE_ST77XX_FRAMEBUFFER
-    enum {ST77XX_DMA_INIT=0x01, ST77XX_DMA_CONT=0x02, ST77XX_DMA_FINISH=0x04,ST77XX_DMA_ACTIVE=0x80};
-
-  // added support to use optional Frame buffer
-  void  setFrameBuffer(uint16_t *frame_buffer);
-  uint8_t useFrameBuffer(boolean b);    // use the frame buffer?  First call will allocate
-  void  freeFrameBuffer(void);      // explicit call to release the buffer
-  void  updateScreen(void);       // call to say update the screen now.
-  bool  updateScreenAsync(bool update_cont = false);  // call to say update the screen optinoally turn into continuous mode.
-  void  waitUpdateAsyncComplete(void);
-  void  endUpdateAsync();      // Turn of the continueous mode fla
-  void  dumpDMASettings();
-  uint16_t *getFrameBuffer() {return _pfbtft;}
-  uint32_t frameCount() {return _dma_frame_count; }
-  boolean asyncUpdateActive(void)  {return (_dma_state & ST77XX_DMA_ACTIVE);}
-  void  initDMASettings(void);
-#else
     // added support to use optional Frame buffer
     void  setFrameBuffer(uint16_t *frame_buffer) {return;}
     uint8_t useFrameBuffer(bool b) { _useFramebuffer = b; return 0;};    // use the frame buffer?  First call will allocate
@@ -295,8 +272,6 @@ public:
     uint32_t frameCount() {return 0; }
     uint16_t *getFrameBuffer() {return NULL;}
     bool asyncUpdateActive(void)  {return false;}
-#endif
-
 
 protected:
     bool _useFramebuffer = false;
@@ -307,7 +282,7 @@ protected:
               _windowx1 = 128,
               _windowy1 = 128;
 
-    virtual void update() = 0;
+    virtual void update() { };
     virtual uint16_t *getFrameBufferPtr() = 0;
 
     void    spiwrite(uint8_t),
@@ -391,14 +366,7 @@ protected:
   uint32_t ctar;
   volatile uint8_t *datapin, *clkpin, *cspin, *rspin;
 
-  inline void beginSPITransaction() {
-  }
-
-  inline void endSPITransaction()
-  {
-  }
-
-    void HLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+    virtual void HLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     {
         x+=_originx;
         y+=_originy;
@@ -414,7 +382,7 @@ protected:
         }
     }
 
-    void VLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+    virtual void VLine(int16_t x, int16_t y, int16_t h, uint16_t color)
     {
         x+=_originx;
         y+=_originy;

@@ -73,8 +73,30 @@ public:
 
 // helper to check and display for shader linker error
     bool check_program_link_status(GLuint obj);
+
+    virtual void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    virtual void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
+    virtual void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    virtual void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
+    virtual void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    virtual void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    virtual void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+    virtual void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+    virtual void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
+    virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+    virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    virtual void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
+    virtual void HLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+    void VLine(int16_t x, int16_t y, int16_t h, uint16_t color) override;
+
+    virtual void fillScreen(uint16_t color);
+    virtual void drawPixel(int16_t x, int16_t y, uint16_t color);
+    virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+    virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+    virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 private:
     long lastUpdate = 0;
+    bool _surpressUpdate = false;
 };
 
 
