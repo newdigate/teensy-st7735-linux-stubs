@@ -837,8 +837,9 @@ void ST7735_t3::setTextDatum(uint8_t d)
 int16_t ST7735_t3::drawNumber(long long_num, int poX, int poY)
 {
     char str[14];
-    sprintf(str, "%d", long_num);
-    return drawString(str, poX, poY);
+    sprintf(str, "%ld", long_num);
+    String s(str);
+    return drawString(s, poX, poY);
 }
 
 
