@@ -838,7 +838,7 @@ int16_t ST7735_t3::drawNumber(long long_num, int poX, int poY)
 {
     char str[14];
     sprintf(str, "%ld", long_num);
-    String s(str);
+    String s((char *)str);
     return drawString(s, poX, poY);
 }
 
