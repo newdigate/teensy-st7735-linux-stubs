@@ -6,12 +6,12 @@
 
 void st7735_opengl::update() {
     if (_surpressUpdate) return;
-
-    long milliseconds = millis();
+/*
+    unsigned long milliseconds = millis();
     if (milliseconds - lastUpdate < 20) {
         return;
     }
-    lastUpdate = milliseconds;
+    lastUpdate = milliseconds; */
     glfwPollEvents();
 
     // use the shader program
@@ -48,7 +48,9 @@ int st7735_opengl::write(uint8_t c) {
 }
 
 int st7735_opengl::write(const uint8_t *buffer, size_t size) {
-    _surpressUpdate = true;
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+
     // Lets try to handle some of the special font centering code that was done for default fonts.
     if (_center_x_text || _center_y_text ) {
         int16_t x, y;
@@ -122,8 +124,11 @@ int st7735_opengl::write(const uint8_t *buffer, size_t size) {
             }
         }
     }
-    _surpressUpdate = false;
-    update();
+
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
     return size;
 }
 
@@ -156,6 +161,7 @@ bool st7735_opengl::check_program_link_status(GLuint obj) {
 }
 
 st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
+    initialize_mock_arduino();
     /* Initialize the library */
     if (!glfwInit()) {
         return;

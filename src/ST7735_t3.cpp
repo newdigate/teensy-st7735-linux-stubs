@@ -859,7 +859,7 @@ int16_t ST7735_t3::drawFloat(float floatNumber, int dp, int poX, int poY)
 ** Description :            draw string with padding if it is defined
 ***************************************************************************************/
 // Without font number, uses font set by setTextFont()
-int16_t ST7735_t3::drawString(const string& string, int poX, int poY)
+int16_t ST7735_t3::drawString(const String& string, int poX, int poY)
 {
     int16_t len = string.length() + 2;
     return drawString1((char*)string.c_str(), string.length(), poX, poY);
@@ -2077,7 +2077,7 @@ void ST7735_t3::getTextBounds(const char *str, int16_t x, int16_t y,
     }
 }
 
-void ST7735_t3::getTextBounds(const string &str, int16_t x, int16_t y,
+void ST7735_t3::getTextBounds(const String &str, int16_t x, int16_t y,
                               int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
     if (str.length() != 0) {
         getTextBounds(const_cast<char*>(str.c_str()), x, y, x1, y1, w, h);

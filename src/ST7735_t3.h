@@ -193,7 +193,7 @@ public:
                        int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h);
     void getTextBounds(const char *string, int16_t x, int16_t y,
                        int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h);
-    void getTextBounds(const string &str, int16_t x, int16_t y,
+    void getTextBounds(const String &str, int16_t x, int16_t y,
                        int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h);
     int16_t strPixelLen(const char * str);
 
@@ -203,7 +203,7 @@ public:
     int16_t  drawNumber(long long_num,int poX, int poY);
     int16_t  drawFloat(float floatNumber,int decimal,int poX, int poY);
     // Handle char arrays
-    int16_t drawString(const string& string, int poX, int poY);
+    int16_t drawString(const String& string, int poX, int poY);
     int16_t drawString1(char string[], int16_t len, int poX, int poY);
 
     void setTextDatum(uint8_t datum);
@@ -476,8 +476,8 @@ public:
             outline = _outlinecolor;
             text = _fillcolor;
         }
-        _gfx->fillRoundRect(_x - (_w/2), _y - (_h/2), _w, _h, min(_w,_h)/4, fill);
-        _gfx->drawRoundRect(_x - (_w/2), _y - (_h/2), _w, _h, min(_w,_h)/4, outline);
+        _gfx->fillRoundRect(_x - (_w/2), _y - (_h/2), _w, _h, ST7735_min(_w,_h)/4, fill);
+        _gfx->drawRoundRect(_x - (_w/2), _y - (_h/2), _w, _h, ST7735_min(_w,_h)/4, outline);
         _gfx->setCursor(_x - strlen(_label)*3*_textsize_x, _y-4*_textsize_y);
         _gfx->setTextColor(text);
         _gfx->setTextSize(_textsize_x, _textsize_y);
