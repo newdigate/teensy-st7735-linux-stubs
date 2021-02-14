@@ -161,8 +161,17 @@ public:
     virtual void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
     virtual void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
     virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+    virtual void drawLine(float x0, float y0, float x1, float y1, uint16_t color, uint16_t backgroundColor);
+
     virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     virtual void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
+
+    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color);
+    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor);
+
+    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color);
+    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor);
+
     virtual void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) { drawChar(x, y, c, color, bg, size, size);}
 
     static const int16_t CENTER = 9998;
@@ -179,8 +188,8 @@ public:
     bool getTextWrap();
 
     //////
-    virtual int write(uint8_t);
-    virtual int write(const uint8_t *buffer, size_t size);
+    int write(uint8_t) override;
+    int write(const uint8_t *buffer, size_t size) override;
     int16_t getCursorX(void) const { return cursor_x; }
     int16_t getCursorY(void) const { return cursor_y; }
     void setFont(const ILI9341_t3_font_t &f);
@@ -440,6 +449,23 @@ protected:
         writedata16(color);
     }
 
+    float getPt( float n1 , float n2 , float perc )
+    {
+        float diff = n2 - n1;
+
+        return n1 + ( diff * perc );
+    }
+
+    float fpart(float x) {
+        return x - floor(x);
+    }
+
+    float rfpart(float x) {
+        return 1.0f - fpart(x);
+    }
+
+    virtual void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
+    virtual void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
 };
 
 #define Adafruit_GFX_Button ST7735_Button
@@ -497,6 +523,7 @@ public:
     bool isPressed() { return currstate; }
     bool justPressed() { return (currstate && !laststate); }
     bool justReleased() { return (!currstate && laststate); }
+
 private:
     ST7735_t3 *_gfx;
     int16_t _x, _y;
@@ -505,6 +532,7 @@ private:
     uint16_t _outlinecolor, _fillcolor, _textcolor;
     char _label[10];
     bool currstate, laststate;
+
 };
 
 #endif	 //end cplus

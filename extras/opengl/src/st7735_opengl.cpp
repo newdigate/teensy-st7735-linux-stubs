@@ -6,12 +6,12 @@
 
 void st7735_opengl::update() {
     if (_surpressUpdate) return;
-/*
-    unsigned long milliseconds = millis();
-    if (milliseconds - lastUpdate < 20) {
+
+    unsigned long microsecs = micros();
+    if (microsecs - lastUpdate < 100) {
         return;
     }
-    lastUpdate = milliseconds; */
+    lastUpdate = microsecs;
     glfwPollEvents();
 
     // use the shader program
@@ -160,7 +160,7 @@ bool st7735_opengl::check_program_link_status(GLuint obj) {
     return true;
 }
 
-st7735_opengl::st7735_opengl() : ST7735_t3(1,2) {
+st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
     initialize_mock_arduino();
     /* Initialize the library */
     if (!glfwInit()) {
@@ -503,6 +503,26 @@ void st7735_opengl::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t colo
     bool activateSurpress = !_surpressUpdate;
     if (activateSurpress) _surpressUpdate = true;
     ST7735_t3::drawFastHLine(x, y, w, color);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, color, backgroundColor, drawAntialiased);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, color, backgroundColor, drawAntialiased);
     if (activateSurpress) {
         _surpressUpdate = false;
         update();

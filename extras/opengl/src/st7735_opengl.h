@@ -58,15 +58,15 @@ public:
     GLuint texture;
     // vao and vbo handle
     unsigned int VBO, VAO, EBO;
-    st7735_opengl();
+    st7735_opengl(bool drawFrame);
 
-    void Pixel(int16_t x, int16_t y, uint16_t color);
-    int write(uint8_t c);
+    void Pixel(int16_t x, int16_t y, uint16_t color) override;
+    int write(uint8_t c) override;
 
-    int write(const uint8_t *buffer, size_t size);
+    int write(const uint8_t *buffer, size_t size) override;
 
-    virtual void update();
-    virtual uint16_t *getFrameBufferPtr() { return textureImage; };
+    void update() override;
+    uint16_t *getFrameBufferPtr() override { return textureImage; };
     bool shouldClose();
     // helper to check and display for shader compiler errors
     bool check_shader_compile_status(GLuint obj);
@@ -74,29 +74,36 @@ public:
 // helper to check and display for shader linker error
     bool check_program_link_status(GLuint obj);
 
-    virtual void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    virtual void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
-    virtual void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    virtual void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
-    virtual void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    virtual void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    virtual void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
-    virtual void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
-    virtual void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
-    virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-    virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    virtual void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
-    virtual void HLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+    void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) override;
+    void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) override;
+    void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) override;
+    void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) override;
+    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) override;
+    void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) override;
+    void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) override;
+    void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) override;
+    void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color) override;
+    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) override;
+    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
+    void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y) override;
+    void HLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
     void VLine(int16_t x, int16_t y, int16_t h, uint16_t color) override;
+    virtual void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) override;
+    virtual void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) override;
 
-    virtual void fillScreen(uint16_t color);
-    virtual void drawPixel(int16_t x, int16_t y, uint16_t color);
-    virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-    virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-    virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    void fillScreen(uint16_t color) override;
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override;
+    void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override;
+    void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
+    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
+
+    void drawFrame(bool draw) {
+        _drawFrame = draw;
+    }
 private:
     long lastUpdate = 0;
     bool _surpressUpdate = false;
+    bool _drawFrame = false;
 };
 
 

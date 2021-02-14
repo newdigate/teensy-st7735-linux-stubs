@@ -55,15 +55,15 @@ int main() {
     tft.fillScreen(ST77XX_RED);
     tft.setCursor(ST7735_t3::CENTER, ST7735_t3::CENTER);
     tft.print("RED");
-    delay(500);
+    delay(1000);
     tft.fillScreen(ST77XX_GREEN);
     tft.setCursor(ST7735_t3::CENTER, ST7735_t3::CENTER);
     tft.print("GREEN");
-    delay(500);
+    delay(1000);
     tft.fillScreen(ST77XX_BLUE);
     tft.setCursor(ST7735_t3::CENTER, ST7735_t3::CENTER);
     tft.print("BLUE");
-    delay(500);
+    delay(1000);
     tft.fillScreen(ST77XX_BLACK);
     tft.setCursor(0,0);
     Serial.print("Initializing SD card...");

@@ -28,4 +28,7 @@ if (DEFINED USE_INSTALLED_ST7735)
 endif()
 target_link_libraries(basic ${LIBS})
 
+set(CMAKE_VERBOSE_MAKEFILE 1)
+set(CMAKE_AUTOGEN_VERBOSE 1)
+
 

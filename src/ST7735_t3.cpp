@@ -729,6 +729,75 @@ void ST7735_t3::drawLine(int16_t x0, int16_t y0,
 #endif
 }
 
+// Xiaolin Wu's line algorithm- thx wikpedia (https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm)
+void ST7735_t3::drawLine(float x0, float y0,
+                         float x1, float y1, uint16_t color, uint16_t backgroundColor)
+{
+    bool steep = abs(y1 - y0) > abs(x1 - x0);
+    if (steep) {
+        st7735_swap(x0, y0);
+        st7735_swap(x1, y1);
+    }
+    if (x0 > x1) {
+        st7735_swap(x0, x1);
+        st7735_swap(y0, y1);
+    }
+
+    float dx, dy, gradient;
+    dx = x1 - x0;
+    dy = y1 - y0;
+    if (dx == 0.0f) {
+        gradient = 1.0;
+    } else
+        gradient = dy / dx;
+
+    // handle first endpoint
+    int16_t xend = int16_t(round(x0));
+    int16_t yend = int16_t(round(y0 + gradient * (xend - x0)));
+    float xgap = rfpart(x0 + 0.5f);
+    int16_t xpxl1 = xend; // this will be used in the main loop
+    int16_t ypxl1 = yend;
+    if (steep) {
+        drawPixel(ypxl1, xpxl1, alphaBlendRGB565( color, backgroundColor, (rfpart(yend) * xgap * 256.0f)));
+        drawPixel(ypxl1+1, xpxl1,  alphaBlendRGB565( color, backgroundColor, (fpart(yend) * xgap * 256.0f)));
+    } else {
+        drawPixel(xpxl1, ypxl1, alphaBlendRGB565( color, backgroundColor, rfpart(yend) * xgap * 256.0f));
+        drawPixel(xpxl1, ypxl1 + 1, alphaBlendRGB565( color, backgroundColor, fpart(yend) * xgap * 256.0f));
+    }
+    float intery = yend + gradient; // first y-intersection for the main loop
+
+    // handle second endpoint
+    xend = int16_t(round(x1));
+    yend = int16_t(round(y1 + gradient * (xend - x1)));
+    xgap = fpart(x1 + 0.5f);
+    int16_t xpxl2 = xend; //this will be used in the main loop
+    int16_t ypxl2 = yend;
+    if (steep) {
+        drawPixel(ypxl2, xpxl2, alphaBlendRGB565( color, backgroundColor,rfpart(yend) * xgap * 256.0f));
+        drawPixel(ypxl2 + 1, xpxl2, alphaBlendRGB565( color, backgroundColor, fpart(yend) * xgap * 256.0f));
+    }
+    else {
+        drawPixel(xpxl2, ypxl2, rfpart(yend) * xgap);
+        drawPixel(xpxl2, ypxl2 + 1, fpart(yend) * xgap);
+    }
+
+    // main loop
+    if (steep) {
+        for (int16_t x=xpxl1 + 1; x < xpxl2-1; x++) {
+            drawPixel(int16_t((intery)), x, alphaBlendRGB565( color, backgroundColor,rfpart(intery) * 256.0f));;
+            drawPixel(int16_t((intery)) + 1, x, alphaBlendRGB565( color, backgroundColor,fpart(intery)* 256.0f));
+            intery += gradient;
+        }
+    }
+    else {
+        for (int16_t x=xpxl1 + 1; x < xpxl2-1; x++) {
+            drawPixel(x, int16_t((intery)),  alphaBlendRGB565( color, backgroundColor,rfpart(intery)* 256.0f));
+            drawPixel(x, int16_t((intery))+1, alphaBlendRGB565( color, backgroundColor,fpart(intery)* 256.0f));
+            intery += gradient;
+        }
+    }
+}
+
 void ST7735_t3::drawBitmap(int16_t x, int16_t y,
                            const uint8_t *bitmap, int16_t w, int16_t h,
                            uint16_t color) {
@@ -3164,3 +3233,88 @@ void ST7735_t3::waitUpdateAsyncComplete(void)
 #endif
 
 #endif
+void ST7735_t3::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color) {
+    drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, color, ST7735_BLACK, false);
+}
+
+void ST7735_t3::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor) {
+    drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, color, backgroundColor, true);
+}
+
+void ST7735_t3::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
+    float x = p0x, y = p0y;
+    //printf("curve: delta:%f \t p0.x:%f, p0.y:%f\t p1.x:%f, p1.y:%f \t p2.x:%f, p2.y:%f\n", delta, p0x, p0y, p1x, p1y, p2x, p2y);
+    for( float i = delta ; i <= 1.0f ; i += delta )
+    {
+        // The Green Line
+        float xa = getPt( p0x , p1x , i );
+        float ya = getPt( p0y , p1y , i );
+        float xb = getPt( p1x , p2x , i );
+        float yb = getPt( p1y , p2y , i );
+
+        // The Black Dot
+        float x2 = getPt( xa , xb , i );
+        float y2 = getPt( ya , yb , i );
+
+        /*
+        if (pix1x == pix2x && pix1y == pix2y)
+            drawPixel(pix1x, pix1y, color);
+        else
+        */
+        if (drawAntialiased)
+            drawLine( x, y, x2, y2, color, backgroundColor );
+        else {
+            int16_t pix1x = int16_t(round(x));
+            int16_t pix1y = int16_t(round(y));
+            int16_t pix2x = int16_t(round(x2));
+            int16_t pix2y = int16_t(round(y2));
+            drawLine(pix1x, pix1y, pix2x, pix2y, color);
+        }
+        x = x2;
+        y = y2;
+    }
+}
+
+void ST7735_t3::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color) {
+    drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, color, ST7735_BLACK, false);
+}
+void ST7735_t3::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor) {
+    drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, color, backgroundColor, true);
+}
+
+void ST7735_t3::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
+    float x = p0x, y = p0y;
+    //printf("curve: delta: %f \t p0.x:%f, p0.y:%f \t p1.x:%f, p1.y:%f \t p2.x:%f, p2.y:%f \t p3.x:%f, p3.y:%f\n", delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y);
+    for( float i = delta ; i <= 1.0f ; i += delta )
+    {
+        // The Green Lines
+        float xa = getPt( p0x , p1x , i );
+        float ya = getPt( p0y , p1y , i );
+        float xb = getPt( p1x , p2x , i );
+        float yb = getPt( p1y , p2y , i );
+        float xc = getPt( p2x , p3x , i );
+        float yc = getPt( p2y , p3y , i );
+
+        // The Blue Line
+        float xm = getPt( xa , xb , i );
+        float ym = getPt( ya , yb , i );
+        float xn = getPt( xb , xc , i );
+        float yn = getPt( yb , yc , i );
+
+        // The Black Dot
+        float x2 = getPt( xm , xn , i );
+        float y2 = getPt( ym , yn , i );
+
+        if (drawAntialiased)
+            drawLine( x, y, x2, y2, color, backgroundColor );
+        else {
+            int16_t pix1x = int16_t(round(x));
+            int16_t pix1y = int16_t(round(y));
+            int16_t pix2x = int16_t(round(x2));
+            int16_t pix2y = int16_t(round(y2));
+            drawLine( pix1x, pix1y, pix2x, pix2y, color );
+        }
+        x = x2;
+        y = y2;
+    }
+}
