@@ -22,7 +22,7 @@
 #include "cstdlib"
 #include <cstdlib>
 #include <cstdio>
-
+#include <cmath>
 #ifdef ENABLE_ST77XX_FRAMEBUFFER
 //#define DEBUG_ASYNC_UPDATE
 //#define DEBUG_ASYNC_LEDS
@@ -752,8 +752,8 @@ void ST7735_t3::drawLine(float x0, float y0,
         gradient = dy / dx;
 
     // handle first endpoint
-    int16_t xend = int16_t(round(x0));
-    int16_t yend = int16_t(round(y0 + gradient * (xend - x0)));
+    int16_t xend = int16_t(std::round(x0));
+    int16_t yend = int16_t(std::round(y0 + gradient * (xend - x0)));
     float xgap = rfpart(x0 + 0.5f);
     int16_t xpxl1 = xend; // this will be used in the main loop
     int16_t ypxl1 = yend;
@@ -767,8 +767,8 @@ void ST7735_t3::drawLine(float x0, float y0,
     float intery = yend + gradient; // first y-intersection for the main loop
 
     // handle second endpoint
-    xend = int16_t(round(x1));
-    yend = int16_t(round(y1 + gradient * (xend - x1)));
+    xend = int16_t(std::round(x1));
+    yend = int16_t(std::round(y1 + gradient * (xend - x1)));
     xgap = fpart(x1 + 0.5f);
     int16_t xpxl2 = xend; //this will be used in the main loop
     int16_t ypxl2 = yend;
