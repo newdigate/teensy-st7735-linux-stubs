@@ -59,6 +59,7 @@ public:
     // vao and vbo handle
     unsigned int VBO, VAO, EBO;
     st7735_opengl(bool drawFrame);
+    st7735_opengl();
 
     void Pixel(int16_t x, int16_t y, uint16_t color) override;
     int write(uint8_t c) override;

@@ -160,6 +160,10 @@ bool st7735_opengl::check_program_link_status(GLuint obj) {
     return true;
 }
 
+st7735_opengl::st7735_opengl() : st7735_opengl(false) {
+
+}
+
 st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
     initialize_mock_arduino();
     /* Initialize the library */
@@ -528,3 +532,4 @@ void st7735_opengl::drawCurve(float delta, float p0x, float p0y, float p1x, floa
         update();
     }
 }
+
