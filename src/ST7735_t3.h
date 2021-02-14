@@ -22,7 +22,7 @@
 #include "Arduino.h"
 
 #include "ILI9341_fonts.h"
-
+#include <cmath>
 #define INITR_GREENTAB 0x0
 #define INITR_REDTAB   0x1
 #define INITR_BLACKTAB 0x2
@@ -457,7 +457,7 @@ protected:
     }
 
     float fpart(float x) {
-        return x - floor(x);
+        return x - std::floor(x);
     }
 
     float rfpart(float x) {
