@@ -165,6 +165,8 @@ st7735_opengl::st7735_opengl() : st7735_opengl(false) {
 }
 
 st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
+    _drawFrame = drawFrame;
+
     initialize_mock_arduino();
     /* Initialize the library */
     if (!glfwInit()) {
@@ -184,7 +186,9 @@ st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
     const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(128, 128, "ST7735_t3", NULL, NULL);
+    int width = (_drawFrame)? 128+40 : 128;
+    int height = (_drawFrame)? 128+40 : 128;
+    window = glfwCreateWindow(width, height, "ST7735_t3", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return;
@@ -240,6 +244,23 @@ st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
             -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // bottom left
             -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left
     };
+    if (_drawFrame) {
+        vertices[0] *= 128.0/168.0;
+        vertices[1] *= 128.0/168.0;
+        vertices[2] *= 128.0/168.0;
+
+        vertices[8] *= 128.0/168.0;
+        vertices[9] *= 128.0/168.0;
+        vertices[10] *= 128.0/168.0;
+
+        vertices[16] *= 128.0/168.0;
+        vertices[17] *= 128.0/168.0;
+        vertices[18] *= 128.0/168.0;
+
+        vertices[24] *= 128.0/168.0;
+        vertices[25] *= 128.0/168.0;
+        vertices[26] *= 128.0/168.0;
+    }
     unsigned int indices[] = {
             0, 1, 3, // first triangle
             1, 2, 3  // second triangle
@@ -513,20 +534,30 @@ void st7735_opengl::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t colo
     }
 }
 
-void st7735_opengl::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
+void st7735_opengl::drawCurve4(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
     bool activateSurpress = !_surpressUpdate;
     if (activateSurpress) _surpressUpdate = true;
-    ST7735_t3::drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, color, backgroundColor, drawAntialiased);
+    ST7735_t3::drawCurve4(delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, color, backgroundColor, drawAntialiased);
     if (activateSurpress) {
         _surpressUpdate = false;
         update();
     }
 }
 
-void st7735_opengl::drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
+void st7735_opengl::drawCurve3(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
     bool activateSurpress = !_surpressUpdate;
     if (activateSurpress) _surpressUpdate = true;
-    ST7735_t3::drawCurve(delta, p0x, p0y, p1x, p1y, p2x, p2y, color, backgroundColor, drawAntialiased);
+    ST7735_t3::drawCurve3(delta, p0x, p0y, p1x, p1y, p2x, p2y, color, backgroundColor, drawAntialiased);
+    if (activateSurpress) {
+        _surpressUpdate = false;
+        update();
+    }
+}
+
+void st7735_opengl::drawLine(float x0, float y0, float x1, float y1, uint16_t color, uint16_t backgroundColor) {
+    bool activateSurpress = !_surpressUpdate;
+    if (activateSurpress) _surpressUpdate = true;
+    ST7735_t3::drawLine(x0, y0, x1, y1, color, backgroundColor);
     if (activateSurpress) {
         _surpressUpdate = false;
         update();

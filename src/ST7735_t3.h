@@ -463,9 +463,8 @@ protected:
     float rfpart(float x) {
         return 1.0f - fpart(x);
     }
-
-    virtual void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
-    virtual void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
+    virtual void drawCurve4(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
+    virtual void drawCurve3(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
 };
 
 #define Adafruit_GFX_Button ST7735_Button
