@@ -6,12 +6,17 @@
 
 void st7735_opengl::update() {
     if (_surpressUpdate) return;
-
-    unsigned long microsecs = micros();
-    if (microsecs - lastUpdate < 100) {
+    if (_useFramebuffer && !_update_cont) return;
+    if (!_needsUpdate) {
+        glfwPollEvents();
         return;
     }
-    lastUpdate = microsecs;
+
+    unsigned long microsStart = micros();
+    if (microsStart - lastUpdate < 100) {
+        return;
+    }
+    lastUpdate = microsStart;
     glfwPollEvents();
 
     // use the shader program
@@ -34,13 +39,18 @@ void st7735_opengl::update() {
     // -------------------------------------------------------------------------------
     glfwSwapBuffers(window);
     glfwPollEvents();
-
+    _needsUpdate = false;
+    uint microsStop = micros();
+    //Serial.printf("OpenGL update: %u (%i micros)\n", _updateCount, microsStop - microsStart);
+    _updateCount++;
 }
 
 void st7735_opengl::Pixel(int16_t x, int16_t y, uint16_t color) {
-
-    //int16_t ay = 127 - y;
-    textureImage[y * 128 + x] = color;
+    uint16_t index = y * 128 + x;
+    if (textureImage[index] != color) {
+        textureImage[index] = color;
+        _needsUpdate = true;
+    }
 }
 
 int st7735_opengl::write(uint8_t c) {
@@ -164,8 +174,14 @@ st7735_opengl::st7735_opengl() : st7735_opengl(false) {
 
 }
 
-st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
+st7735_opengl::st7735_opengl(bool drawFrame)  : st7735_opengl(drawFrame, 20) {
+
+}
+
+st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2){
+
     _drawFrame = drawFrame;
+    _frameSize = frameSize;
 
     initialize_mock_arduino();
     /* Initialize the library */
@@ -186,8 +202,8 @@ st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
     const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
     /* Create a windowed mode window and its OpenGL context */
-    int width = (_drawFrame)? 128+40 : 128;
-    int height = (_drawFrame)? 128+40 : 128;
+    int width = (_drawFrame)? 128+(_frameSize*2) : 128;
+    int height = (_drawFrame)? 128+(_frameSize*2) : 128;
     window = glfwCreateWindow(width, height, "ST7735_t3", NULL, NULL);
     if (!window) {
         glfwTerminate();
@@ -245,21 +261,22 @@ st7735_opengl::st7735_opengl(bool drawFrame) : ST7735_t3(1,2) {
             -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left
     };
     if (_drawFrame) {
-        vertices[0] *= 128.0/168.0;
-        vertices[1] *= 128.0/168.0;
-        vertices[2] *= 128.0/168.0;
+        float multiplier = 128.0f/(128.0f + 2.0f * _frameSize);
+        vertices[0] *= multiplier;
+        vertices[1] *= multiplier;
+        vertices[2] *= multiplier;
 
-        vertices[8] *= 128.0/168.0;
-        vertices[9] *= 128.0/168.0;
-        vertices[10] *= 128.0/168.0;
+        vertices[8] *= multiplier;
+        vertices[9] *= multiplier;
+        vertices[10] *= multiplier;
 
-        vertices[16] *= 128.0/168.0;
-        vertices[17] *= 128.0/168.0;
-        vertices[18] *= 128.0/168.0;
+        vertices[16] *= multiplier;
+        vertices[17] *= multiplier;
+        vertices[18] *= multiplier;
 
-        vertices[24] *= 128.0/168.0;
-        vertices[25] *= 128.0/168.0;
-        vertices[26] *= 128.0/168.0;
+        vertices[24] *= multiplier;
+        vertices[25] *= multiplier;
+        vertices[26] *= multiplier;
     }
     unsigned int indices[] = {
             0, 1, 3, // first triangle
@@ -563,4 +580,3 @@ void st7735_opengl::drawLine(float x0, float y0, float x1, float y1, uint16_t co
         update();
     }
 }
-

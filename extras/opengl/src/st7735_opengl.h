@@ -56,9 +56,11 @@ public:
     uint16_t *textureImage;
     GLuint shader_program, vertex_shader, fragment_shader;
     GLuint texture;
+    int16_t _frameSize = 20;
     // vao and vbo handle
     unsigned int VBO, VAO, EBO;
     st7735_opengl(bool drawFrame);
+    st7735_opengl(bool drawFrame, int16_t frameSize);
     st7735_opengl();
 
     void Pixel(int16_t x, int16_t y, uint16_t color) override;
@@ -100,6 +102,11 @@ public:
     void drawFrame(bool draw) {
         _drawFrame = draw;
     }
+    uint16_t *getFrameBuffer() override {
+        if (_useFramebuffer)
+            return textureImage;
+        return NULL;
+    }
 
 protected:
     virtual void drawCurve4(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) override;
@@ -109,6 +116,8 @@ private:
     long lastUpdate = 0;
     bool _surpressUpdate = false;
     bool _drawFrame = false;
+    bool _needsUpdate = false;
+    unsigned long _updateCount = 0;
 };
 
 
