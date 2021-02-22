@@ -273,19 +273,19 @@ public:
     uint8_t useFrameBuffer(bool b) { _useFramebuffer = b; return 0;};    // use the frame buffer?  First call will allocate
     void  freeFrameBuffer(void) {return;}      // explicit call to release the buffer
     void  updateScreen(void) { update(); }       // call to say update the screen now.
-    bool  updateScreenAsync(bool update_cont = false) {return false;}  // call to say update the screen optinoally turn into continuous mode.
+    bool  updateScreenAsync(bool update_cont = false) { _update_cont = update_cont; return _update_cont; }  // call to say update the screen optinoally turn into continuous mode.
     void  waitUpdateAsyncComplete(void) {return;}
     void  endUpdateAsync() {return;}      // Turn of the continueous mode fla
     void  dumpDMASettings() {return;}
 
     uint32_t frameCount() {return 0; }
-    uint16_t *getFrameBuffer() {return NULL;}
+    virtual uint16_t *getFrameBuffer() {return NULL;}
     bool asyncUpdateActive(void)  {return false;}
 
 protected:
     bool _useFramebuffer = false;
     uint8_t  tabcolor;
-
+    bool _update_cont = false;
     uint16_t  _windowx0 = 0,
               _windowy0 = 0,
               _windowx1 = 128,

@@ -754,6 +754,15 @@ void ST7735_t3::drawLine(float x0, float y0,
     // handle first endpoint
     float xend = x0;
     float yend = y0 + gradient * (xend - x0);
+    float intery = yend; // first y-intersection for the main loop
+    int16_t xpxl1 = xend; // this will be used in the main loop
+    int16_t ypxl1 = yend;
+
+    xend = x1;
+    yend = y1 + gradient * (xend - x1);
+    int16_t xpxl2 = xend; //this will be used in the main loop
+    int16_t ypxl2 = yend;
+    /*
     float xgap = rfpart(x0 + 0.5f);
     int16_t xpxl1 = xend; // this will be used in the main loop
     int16_t ypxl1 = yend;
@@ -764,6 +773,7 @@ void ST7735_t3::drawLine(float x0, float y0,
         drawPixel(xpxl1, ypxl1, alphaBlendRGB565( color, backgroundColor, rfpart(yend) * xgap * 255.0f));
         drawPixel(xpxl1, ypxl1 + 1, alphaBlendRGB565( color, backgroundColor, fpart(yend) * xgap * 255.0f));
     }
+
     float intery = yend + gradient; // first y-intersection for the main loop
 
     // handle second endpoint
@@ -779,18 +789,18 @@ void ST7735_t3::drawLine(float x0, float y0,
     else {
         drawPixel(xpxl2, ypxl2, rfpart(yend) * xgap);
         drawPixel(xpxl2, ypxl2 + 1, fpart(yend) * xgap);
-    }
+    } */
 
     // main loop
     if (steep) {
-        for (int16_t x=xpxl1 + 1; x < xpxl2; x++) {
+        for (int16_t x=xpxl1; x <= xpxl2; x++) {
             drawPixel(int16_t((intery)), x, alphaBlendRGB565( color, backgroundColor,rfpart(intery) * 255.0f));;
             drawPixel(int16_t((intery)) + 1, x, alphaBlendRGB565( color, backgroundColor,fpart(intery)* 255.0f));
             intery += gradient;
         }
     }
     else {
-        for (int16_t x=xpxl1 + 1; x < xpxl2; x++) {
+        for (int16_t x=xpxl1; x <= xpxl2; x++) {
             uint8_t alpha2 = rfpart(intery) * 255.0;
             if (alpha2 > 0) {
                 uint16_t firstPixelColor = alphaBlendRGB565(color, backgroundColor, alpha2);
