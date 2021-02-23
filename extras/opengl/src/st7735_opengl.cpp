@@ -4,7 +4,7 @@
 
 #include "st7735_opengl.h"
 
-void st7735_opengl::update() {
+void st7735_opengl::updateScreen() {
     if (_surpressUpdate) return;
     if (_useFramebuffer && !_update_cont) return;
     if (!_needsUpdate) {
@@ -137,7 +137,7 @@ int st7735_opengl::write(const uint8_t *buffer, size_t size) {
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
     return size;
 }
@@ -331,7 +331,7 @@ st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2)
             }
         }
     */
-    update();
+    updateScreen();
 }
 
 bool st7735_opengl::shouldClose() {
@@ -346,7 +346,7 @@ void st7735_opengl::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -358,7 +358,7 @@ void st7735_opengl::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t 
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -370,7 +370,7 @@ void st7735_opengl::fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -383,7 +383,7 @@ st7735_opengl::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corne
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -396,7 +396,7 @@ st7735_opengl::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -409,7 +409,7 @@ st7735_opengl::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -421,7 +421,7 @@ void st7735_opengl::drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, 
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -433,7 +433,7 @@ void st7735_opengl::fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, 
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -445,7 +445,7 @@ void st7735_opengl::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int1
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -457,7 +457,7 @@ void st7735_opengl::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uin
 
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -467,7 +467,7 @@ void st7735_opengl::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
     ST7735_t3::drawRect(x, y, w, h, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -478,7 +478,7 @@ void st7735_opengl::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t col
     ST7735_t3::drawChar(x, y, c, color, bg, size_x, size_y);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -488,7 +488,7 @@ void st7735_opengl::HLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
     ST7735_t3::HLine(x, y, w, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 void st7735_opengl::VLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
@@ -497,7 +497,7 @@ void st7735_opengl::VLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
     ST7735_t3::VLine(x, y, h, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -507,7 +507,7 @@ void st7735_opengl::fillScreen(uint16_t color) {
     ST7735_t3::fillScreen(color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -517,7 +517,7 @@ void st7735_opengl::drawPixel(int16_t x, int16_t y, uint16_t color) {
     ST7735_t3::drawPixel(x, y, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -527,7 +527,7 @@ void st7735_opengl::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t colo
     ST7735_t3::drawFastVLine(x, y, h, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -537,7 +537,7 @@ void st7735_opengl::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
     ST7735_t3::fillRect(x, y, w, h, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
@@ -547,36 +547,79 @@ void st7735_opengl::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t colo
     ST7735_t3::drawFastHLine(x, y, w, color);
     if (activateSurpress) {
         _surpressUpdate = false;
-        update();
+        updateScreen();
     }
 }
 
-void st7735_opengl::drawCurve4(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
-    bool activateSurpress = !_surpressUpdate;
-    if (activateSurpress) _surpressUpdate = true;
-    ST7735_t3::drawCurve4(delta, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, color, backgroundColor, drawAntialiased);
-    if (activateSurpress) {
-        _surpressUpdate = false;
-        update();
+void st7735_opengl::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors) {
+    // Use our Origin.
+    x+=_originx;
+    y+=_originy;
+    //BUGBUG:: Should add some validation of X and Y
+
+    if (_useFramebuffer) {
+        uint16_t * _pfbtft = textureImage;
+        uint16_t * pfbPixel_row = &_pfbtft[ y*_width + x];
+        for (;h>0; h--) {
+            uint16_t * pfbPixel = pfbPixel_row;
+            for (int i = 0 ;i < w; i++) {
+                *pcolors++ = *pfbPixel++;
+            }
+            pfbPixel_row += _width;
+        }
+        return;
     }
 }
 
-void st7735_opengl::drawCurve3(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) {
-    bool activateSurpress = !_surpressUpdate;
-    if (activateSurpress) _surpressUpdate = true;
-    ST7735_t3::drawCurve3(delta, p0x, p0y, p1x, p1y, p2x, p2y, color, backgroundColor, drawAntialiased);
-    if (activateSurpress) {
-        _surpressUpdate = false;
-        update();
-    }
-}
+void st7735_opengl::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors) {
+    x += _originx;
+    y += _originy;
 
-void st7735_opengl::drawLine(float x0, float y0, float x1, float y1, uint16_t color, uint16_t backgroundColor) {
-    bool activateSurpress = !_surpressUpdate;
-    if (activateSurpress) _surpressUpdate = true;
-    ST7735_t3::drawLine(x0, y0, x1, y1, color, backgroundColor);
-    if (activateSurpress) {
-        _surpressUpdate = false;
-        update();
+    uint16_t x_clip_left = 0;  // How many entries at start of colors to skip at start of row
+    uint16_t x_clip_right = 0;    // how many color entries to skip at end of row for clipping
+    // Rectangular clipping
+
+    // See if the whole thing out of bounds...
+    if ((x >= _displayclipx2) || (y >= _displayclipy2)) return;
+    if (((x + w) <= _displayclipx1) || ((y + h) <= _displayclipy1)) return;
+
+    // In these cases you can not do simple clipping, as we need to synchronize the colors array with the
+    // We can clip the height as when we get to the last visible we don't have to go any farther.
+    // also maybe starting y as we will advance the color array.
+    if (y < _displayclipy1) {
+        int dy = (_displayclipy1 - y);
+        h -= dy;
+        pcolors += (dy * w); // Advance color array to
+        y = _displayclipy1;
+    }
+    if ((y + h - 1) >= _displayclipy2) h = _displayclipy2 - y;
+    // For X see how many items in color array to skip at start of row and likewise end of row
+    if (x < _displayclipx1) {
+        x_clip_left = _displayclipx1 - x;
+        w -= x_clip_left;
+        x = _displayclipx1;
+    }
+
+    if ((x + w - 1) >= _displayclipx2) {
+        x_clip_right = w;
+        w = _displayclipx2 - x;
+        x_clip_right -= w;
+    }
+
+    if (_useFramebuffer) {
+        uint16_t *_pfbtft = textureImage;
+        uint16_t *pfbPixel_row = &_pfbtft[y * _width + x];
+        for (; h > 0; h--) {
+            uint16_t *pfbPixel = pfbPixel_row;
+            pcolors += x_clip_left;
+            for (int i = 0; i < w; i++) {
+                *pfbPixel++ = *pcolors++;
+            }
+            pfbPixel_row += _width;
+            pcolors += x_clip_right;
+
+        }
+        _needsUpdate = true;
+        return;
     }
 }

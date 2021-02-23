@@ -29,7 +29,7 @@
 #include "parrot.h"
 #define SD_CS 4
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
-st7735_opengl tft = st7735_opengl();
+st7735_opengl tft = st7735_opengl(true, 10);
 
 void bmpDraw(const char *filename, uint8_t x, uint16_t y);
 uint16_t read16();
@@ -38,7 +38,8 @@ File     bmpFile;
 int main() {
     Serial.begin(9600);
     SD.setSDCardFileData((char *)parrot_bmp, parrot_bmp_len);
-
+    tft.useFrameBuffer(true);
+    tft.updateScreenAsync(true);
     // only uncomment one of these display initializers.
     // ST7735 - More options mentioned in examples for st7735_t3 library
     //tft.initR(INITR_BLACKTAB); // if you're using a 1.8" TFT 128x160 displays
@@ -80,9 +81,9 @@ int main() {
     }
     Serial.print("OK!\n");
     bmpDraw("parrot.bmp", 0, 0);
-
+    tft.updateScreen();
     while(!tft.shouldClose()) {
-        tft.update();
+        tft.updateScreen();
         delay(10);
     }
 }

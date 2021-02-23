@@ -161,18 +161,9 @@ public:
     virtual void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
     virtual void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
     virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-    virtual void drawLine(float x0, float y0, float x1, float y1, uint16_t color, uint16_t backgroundColor);
-
     virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     virtual void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y);
-
-    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color);
-    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor);
-
-    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color);
-    void drawCurve(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor);
-
-    virtual void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) { drawChar(x, y, c, color, bg, size, size);}
+    void inline drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size) { drawChar(x, y, c, color, bg, size, size);}
 
     static const int16_t CENTER = 9998;
     void setCursor(int16_t x, int16_t y, bool autoCenter=false);
@@ -229,7 +220,7 @@ public:
     void scrollTextArea(uint8_t scrollSize);
     void resetScrollBackgroundColor(uint16_t color);
     uint16_t readPixel(int16_t x, int16_t y);
-    void readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors);
+    virtual void readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors);
 
     // setOrigin sets an offset in display pixels where drawing to (0,0) will appear
     // for example: setOrigin(10,10); drawPixel(5,5); will cause a pixel to be drawn at hardware pixel (15,15)
@@ -266,21 +257,17 @@ public:
     void setBitrate(uint32_t n);
 
     // Useful methods added from ili9341_t3
-    void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors);
+    virtual void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors);
 
     // added support to use optional Frame buffer
     void  setFrameBuffer(uint16_t *frame_buffer) {return;}
     uint8_t useFrameBuffer(bool b) { _useFramebuffer = b; return 0;};    // use the frame buffer?  First call will allocate
     void  freeFrameBuffer(void) {return;}      // explicit call to release the buffer
-    void  updateScreen(void) { update(); }       // call to say update the screen now.
+    virtual void  updateScreen(void) { }       // call to say update the screen now.
     bool  updateScreenAsync(bool update_cont = false) { _update_cont = update_cont; return _update_cont; }  // call to say update the screen optinoally turn into continuous mode.
     void  waitUpdateAsyncComplete(void) {return;}
     void  endUpdateAsync() {return;}      // Turn of the continueous mode fla
     void  dumpDMASettings() {return;}
-
-    uint32_t frameCount() {return 0; }
-    virtual uint16_t *getFrameBuffer() {return NULL;}
-    bool asyncUpdateActive(void)  {return false;}
 
 protected:
     bool _useFramebuffer = false;
@@ -290,9 +277,6 @@ protected:
               _windowy0 = 0,
               _windowx1 = 128,
               _windowy1 = 128;
-
-    virtual void update() { };
-    virtual uint16_t *getFrameBufferPtr() = 0;
 
     void    spiwrite(uint8_t),
             spiwrite16(uint16_t d),
@@ -448,23 +432,6 @@ protected:
         writecommand(ST7735_RAMWR);
         writedata16(color);
     }
-
-    float getPt( float n1 , float n2 , float perc )
-    {
-        float diff = n2 - n1;
-
-        return n1 + ( diff * perc );
-    }
-
-    float fpart(float x) {
-        return x - std::floor(x);
-    }
-
-    float rfpart(float x) {
-        return 1.0f - fpart(x);
-    }
-    virtual void drawCurve4(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
-    virtual void drawCurve3(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased);
 };
 
 #define Adafruit_GFX_Button ST7735_Button

@@ -17,7 +17,7 @@
 #include "st7735_t3_font_ComicSansMS.h"
 
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
-st7735_opengl tft = st7735_opengl();
+st7735_opengl tft = st7735_opengl(true, 10);
 
 int main() {
 
@@ -26,6 +26,8 @@ int main() {
     tft.initR();           // Init ST7789 320x240
     tft.setRotation(3);
     tft.useFrameBuffer(true);
+    tft.updateScreenAsync(true);
+
     tft.fillScreen(ST7735_BLACK);
     //while (!Serial) ;
     tft.setTextColor(ST7735_WHITE);
@@ -67,7 +69,7 @@ int main() {
     }
 
     while(!tft.shouldClose()) {
-        tft.update();
+        tft.updateScreen();
         delay(10);
     }
 }

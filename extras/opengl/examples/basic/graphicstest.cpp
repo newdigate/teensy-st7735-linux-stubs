@@ -1,6 +1,6 @@
 #include "../../src/st7735_opengl.h"
 
-st7735_opengl tft = st7735_opengl();
+st7735_opengl tft = st7735_opengl(true, 10);
 
 float p = 3.1415926;
 
@@ -70,7 +70,7 @@ int main() {
     Serial.print("done\n\n");
     delay(1000);
     while(!tft.shouldClose()) {
-        tft.update();
+        tft.updateScreen();
         delay(10);
     }
 }

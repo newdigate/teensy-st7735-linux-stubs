@@ -68,8 +68,6 @@ public:
 
     int write(const uint8_t *buffer, size_t size) override;
 
-    void update() override;
-    uint16_t *getFrameBufferPtr() override { return textureImage; };
     bool shouldClose();
     // helper to check and display for shader compiler errors
     bool check_shader_compile_status(GLuint obj);
@@ -87,7 +85,6 @@ public:
     void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) override;
     void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color) override;
     void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) override;
-    void drawLine(float x0, float y0, float x1, float y1, uint16_t color, uint16_t backgroundColor) override;
     void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
     void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y) override;
     void HLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
@@ -98,19 +95,11 @@ public:
     void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override;
     void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
+    void  updateScreen(void) override;
 
-    void drawFrame(bool draw) {
-        _drawFrame = draw;
-    }
-    uint16_t *getFrameBuffer() override {
-        if (_useFramebuffer)
-            return textureImage;
-        return NULL;
-    }
+    void readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors) override;
 
-protected:
-    virtual void drawCurve4(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) override;
-    virtual void drawCurve3(float delta, float p0x, float p0y, float p1x, float p1y, float p2x, float p2y, uint16_t color, uint16_t backgroundColor, bool drawAntialiased) override;
+    void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors) override;
 
 private:
     long lastUpdate = 0;
