@@ -56,7 +56,7 @@ target_link_libraries(your_application ${teensy_st7735_linux_stubs_LIBS})
 * once installed, add to your CMakeLists.txt
 ``` cmake
 find_package(teensy_st7735_linux_opengl)
-include_directories(${teensy_st7735_linux_opengl_INCLUDE_DIR})
+include_directories(${teensy_st7735_linux_extras_opengl_INCLUDE_DIR})
 ...
 target_link_libraries(your_application ${teensy_st7735_linux_opengl_LIBS})
 ```
