@@ -16,6 +16,9 @@ void testroundrects();
 void tftPrintTest();
 void mediabuttons();
 
+int st7735_main(int argc, char** argv) {
+}
+
 void setup() {
     tft.initR(INITR_GREENTAB);
     tft.useFrameBuffer(true);

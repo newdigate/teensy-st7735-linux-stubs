@@ -35,6 +35,10 @@ void bmpDraw(const char *filename, uint8_t x, uint16_t y);
 uint16_t read16();
 uint32_t read32();
 File     bmpFile;
+
+int st7735_main(int argc, char** argv) {
+}
+
 int main() {
     Serial.begin(9600);
     SD.setSDCardFileData((char *)parrot_bmp, parrot_bmp_len);
