@@ -19,6 +19,9 @@
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
 st7735_opengl tft = st7735_opengl(true, 10);
 
+int st7735_main(int argc, char** argv) {
+}
+
 int main() {
 
     Serial.begin(9600);

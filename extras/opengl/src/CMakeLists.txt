@@ -12,7 +12,8 @@ set(SOURCE_FILES
         st7735_opengl.cpp)
 
 set(HEADER_FILES
-        st7735_opengl.h)
+        st7735_opengl.h
+        st7735_opengl_main.h)
 
 if (NOT DEFINED USE_INSTALLED_ST7735)
     if (NOT DEFINED teensy_x86_stubs_root)

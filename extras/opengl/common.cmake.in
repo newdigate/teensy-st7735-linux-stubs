@@ -1,6 +1,9 @@
 find_package(teensy_x86_stubs)
 include_directories(${teensy_x86_stubs_INCLUDE_DIR})
 
+find_package(teensy_x86_sd_stubs)
+include_directories(${teensy_x86_sd_stubs_INCLUDE_DIR})
+
 if (DEFINED USE_INSTALLED_ST7735)
     message("using installed st7735 libraries...")
     find_package(teensy_st7735_linux_stubs)

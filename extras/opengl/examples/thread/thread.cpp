@@ -1,5 +1,6 @@
 #include "../../src/st7735_opengl.h"
 #include "../../src/st7735_opengl_main.h"
+
 st7735_opengl tft = st7735_opengl(true, 10);
 
 float p = 3.1415926;
@@ -26,6 +27,7 @@ void setup() {
 }
 
 void loop() {
+    uint16_t time = millis();
     tft.fillScreen(ST7735_BLACK);
     delay(500);
 
