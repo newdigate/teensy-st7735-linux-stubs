@@ -52,13 +52,14 @@ void main()
 
 class st7735_opengl : public ST7735_t3 {
 public:
-    GLFWwindow *window;
-    uint16_t *textureImage;
-    GLuint shader_program, vertex_shader, fragment_shader;
-    GLuint texture;
-    int16_t _frameSize = 20;
+    static GLFWwindow *window;
+    static uint16_t textureImage[128*128];
+    static GLuint shader_program, vertex_shader, fragment_shader;
+    static GLuint texture;
+    static int16_t _frameSize;
     // vao and vbo handle
-    unsigned int VBO, VAO, EBO;
+    static unsigned int VBO, VAO, EBO;
+
     st7735_opengl(bool drawFrame);
     st7735_opengl(bool drawFrame, int16_t frameSize);
     st7735_opengl();
@@ -68,45 +69,24 @@ public:
 
     int write(const uint8_t *buffer, size_t size) override;
 
-    bool shouldClose();
+    static bool shouldClose();
     // helper to check and display for shader compiler errors
     bool check_shader_compile_status(GLuint obj);
 
 // helper to check and display for shader linker error
     bool check_program_link_status(GLuint obj);
 
-    void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) override;
-    void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) override;
-    void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) override;
-    void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) override;
-    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) override;
-    void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) override;
-    void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) override;
-    void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) override;
-    void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color) override;
-    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) override;
-    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
-    void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size_x, uint8_t size_y) override;
-    void HLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
-    void VLine(int16_t x, int16_t y, int16_t h, uint16_t color) override;
-
-    void fillScreen(uint16_t color) override;
-    void drawPixel(int16_t x, int16_t y, uint16_t color) override;
-    void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override;
-    void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
-    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
     void  updateScreen(void) override;
 
     void readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors) override;
 
     void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors) override;
 
+    static void refresh(void);
+
 private:
-    long lastUpdate = 0;
-    bool _surpressUpdate = false;
     bool _drawFrame = false;
-    bool _needsUpdate = false;
-    unsigned long _updateCount = 0;
+    static bool _initialized;
 };
 
 
