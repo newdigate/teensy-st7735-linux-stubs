@@ -2,7 +2,16 @@ cmake_minimum_required(VERSION 3.5)
 project(teensy_st7735_linux_opengl CXX)
 set(teensy_st7735_linux_opengl_VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 11)
-include(../common.cmake.in)
+
+find_package(teensy_x86_stubs)
+include_directories(${teensy_x86_stubs_INCLUDE_DIR})
+
+find_package(teensy_x86_sd_stubs)
+include_directories(${teensy_x86_sd_stubs_INCLUDE_DIR})
+
+find_package(teensy_st7735_linux_stubs)
+include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
+
 include(../opengl.cmake.in)
 
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/teensy_st7735_linux_opengl/)
@@ -15,13 +24,6 @@ set(HEADER_FILES
         st7735_opengl.h
         st7735_opengl_main.h)
 
-if (NOT DEFINED USE_INSTALLED_ST7735)
-    if (NOT DEFINED teensy_x86_stubs_root)
-        set(teensy_st7735_stubs_root ${CMAKE_SOURCE_DIR}/../../../)
-    endif()
-endif()
-
-include_directories(${teensy_st7735_stubs_root}/src)
 add_library(teensy_st7735_linux_opengl SHARED STATIC ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(teensy_st7735_linux_opengl PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
