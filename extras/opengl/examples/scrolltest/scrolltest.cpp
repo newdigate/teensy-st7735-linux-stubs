@@ -13,7 +13,7 @@
   MIT license, all text above must be included in any redistribution
  ****************************************************/
 
-#include "../../src/st7735_opengl.h"
+#include "st7735_opengl.h"
 #include "st7735_t3_font_ComicSansMS.h"
 
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC

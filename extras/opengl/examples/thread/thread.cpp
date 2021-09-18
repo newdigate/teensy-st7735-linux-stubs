@@ -1,5 +1,5 @@
-#include "../../src/st7735_opengl.h"
-#include "../../src/st7735_opengl_main.h"
+#include "st7735_opengl.h"
+#include "st7735_opengl_main.h"
 
 st7735_opengl tft = st7735_opengl(true, 10);
 

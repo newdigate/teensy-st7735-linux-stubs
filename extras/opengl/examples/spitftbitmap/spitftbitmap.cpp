@@ -25,7 +25,7 @@
 //#include <SPI.h>
 #include <SD.h>
 
-#include "../../src/st7735_opengl.h"
+#include "st7735_opengl.h"
 #include "parrot.h"
 #define SD_CS 4
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
