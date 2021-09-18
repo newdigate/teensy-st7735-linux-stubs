@@ -2,7 +2,16 @@ cmake_minimum_required(VERSION 3.5)
 project(teensy_st7735_linux_opengl CXX)
 set(teensy_st7735_linux_opengl_VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 11)
-include(../common.cmake.in)
+
+find_package(teensy_x86_stubs)
+include_directories(${teensy_x86_stubs_INCLUDE_DIR})
+
+find_package(teensy_x86_sd_stubs)
+include_directories(${teensy_x86_sd_stubs_INCLUDE_DIR})
+
+find_package(teensy_st7735_linux_stubs)
+include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
+
 include(../opengl.cmake.in)
 
 find_package(teensy_st7735_linux_stubs)
