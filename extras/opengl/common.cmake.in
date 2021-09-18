@@ -4,20 +4,5 @@ include_directories(${teensy_x86_stubs_INCLUDE_DIR})
 find_package(teensy_x86_sd_stubs)
 include_directories(${teensy_x86_sd_stubs_INCLUDE_DIR})
 
-if (DEFINED USE_INSTALLED_ST7735)
-    message("using installed st7735 libraries...")
-    find_package(teensy_st7735_linux_stubs)
-    include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
-    set(ST7735_OPENGL_SOURCES ../../src/st7735_opengl.cpp)
-else()
-    message("using st7735 libraries from source...")
-    include_directories(${teensy_st7735_stubs_root}/src)
-    set(ST7735_SOURCES
-            ${teensy_st7735_stubs_root}/src/ST7735_t3.cpp
-            ${teensy_st7735_stubs_root}/src/glcdfont.c
-            ${teensy_st7735_stubs_root}/src/st7735_t3_font_ComicSansMS.c
-            ${teensy_st7735_stubs_root}/src/st7735_t3_font_Arial.c)
-    set(ST7735_OPENGL_SOURCES ${teensy_st7735_stubs_root}/extras/opengl/src/st7735_opengl.cpp)
-    message(STATUS "ST7735 opengl:" ${ST7735_OPENGL_SOURCES})
-endif()
-
+find_package(teensy_st7735_linux_stubs)
+include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
