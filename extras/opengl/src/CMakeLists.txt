@@ -14,9 +14,6 @@ include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
 
 include(../opengl.cmake.in)
 
-find_package(teensy_st7735_linux_stubs)
-include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
-
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/teensy_st7735_linux_opengl/)
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/teensy_st7735_linux_opengl )
 
