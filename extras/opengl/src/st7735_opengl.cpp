@@ -186,6 +186,11 @@ st7735_opengl::st7735_opengl(bool drawFrame)  : st7735_opengl(drawFrame, 20) {
 
 }
 
+void st7735_opengl::collectWindowClose(GLFWwindow* window)
+{
+    arduino_should_exit = true;
+}
+
 st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2){
 
     _drawFrame = drawFrame;
@@ -218,6 +223,7 @@ st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2)
     }
 
     //glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    glfwSetWindowCloseCallback(window, collectWindowClose);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);

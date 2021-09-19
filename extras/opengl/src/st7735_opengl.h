@@ -83,7 +83,7 @@ public:
     void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors) override;
 
     static void refresh(void);
-
+    static void collectWindowClose(GLFWwindow* window);
 private:
     bool _drawFrame = false;
     static bool _initialized;
