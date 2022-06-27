@@ -117,18 +117,13 @@ typedef struct {
 #define ST7735_min(a, b) ((a < b)? a : b )
 #define ST7735_max(a, b) ((a > b)? a : b )
 
-class ST7735_t3 : public Print
-{
-
+class AbstractDisplay : public Print {
 public:
+    AbstractDisplay() : Print() {
+    }
+    virtual ~AbstractDisplay() {
 
-    ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1);
-    ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1);
-
-    void     initB(void),                             // for ST7735B displays
-            initR(uint8_t options = INITR_GREENTAB), // for ST7735R
-            setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
-            pushColor(uint16_t color, bool last_pixel=false);
+    }
     virtual void
             fillScreen(uint16_t color),
             drawPixel(int16_t x, int16_t y, uint16_t color),
@@ -142,10 +137,7 @@ public:
     void     setRowColStart(uint16_t x, uint16_t y);
     uint16_t  rowStart() {return _rowstart;}
     uint16_t  colStart() {return _colstart;}
-
-    void setAddr(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1){}
-
-    ////
+   ////
     // from Adafruit_GFX.h
     int16_t width(void) const { return _width; };
     int16_t height(void) const { return _height; }
@@ -178,9 +170,6 @@ public:
     void setTextWrap(bool w);
     bool getTextWrap();
 
-    //////
-    int write(uint8_t) override;
-    int write(const uint8_t *buffer, size_t size) override;
     int16_t getCursorX(void) const { return cursor_x; }
     int16_t getCursorY(void) const { return cursor_y; }
     void setFont(const ILI9341_t3_font_t &f);
@@ -244,18 +233,6 @@ public:
         //if (Serial) Serial.printf("clear clip Rect\n");
         updateDisplayClip();
     }
-////
-
-    void sendCommand(uint8_t commandByte, const uint8_t *dataBytes, uint8_t numDataBytes);
-
-
-
-    // Pass 8-bit (each) R,G,B, get back 16-bit packed color
-    inline uint16_t Color565(uint8_t r, uint8_t g, uint8_t b) {
-        return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
-    }
-    void setBitrate(uint32_t n);
-
     // Useful methods added from ili9341_t3
     virtual void writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors);
 
@@ -269,7 +246,28 @@ public:
     void  endUpdateAsync() {return;}      // Turn of the continueous mode fla
     void  dumpDMASettings() {return;}
 
+    void charBounds(char c, int16_t *x, int16_t *y,
+                    int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy);
+    int16_t _width, _height;
+    
+    bool gfxFontLastCharPosFG(int16_t x, int16_t y);
+
+    void drawFontBits(bool opaque, uint32_t bits, uint32_t numbits, int32_t x, int32_t y, uint32_t repeat);
+    void drawFontPixel( uint8_t alpha, uint32_t x, uint32_t y );
+    uint32_t fetchpixel(const uint8_t *p, uint32_t index, uint32_t x);
+
+    virtual void setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+    virtual void pushColor(uint16_t color, bool last_pixel=false);
+    
+    void setAddr(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1){}
+    inline uint16_t Color565(uint8_t r, uint8_t g, uint8_t b) {
+        return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
+    }
 protected:
+    // Pass 8-bit (each) R,G,B, get back 16-bit packed color
+
+    uint16_t _colstart, _rowstart, _xstart, _ystart, _rot, _screenHeight, _screenWidth;
+
     bool _useFramebuffer = false;
     uint8_t  tabcolor;
     bool _update_cont = false;
@@ -277,21 +275,6 @@ protected:
               _windowy0 = 0,
               _windowx1 = 128,
               _windowy1 = 128;
-
-    void    spiwrite(uint8_t),
-            spiwrite16(uint16_t d),
-            writecommand(uint8_t c),
-            writecommand_last(uint8_t c),
-            writedata(uint8_t d),
-            writedata_last(uint8_t d),
-            writedata16(uint16_t d),
-            writedata16_last(uint16_t d),
-            commandList(const uint8_t *addr),
-            commonInit(const uint8_t *cmdList, uint8_t mode=0);
-    void charBounds(char c, int16_t *x, int16_t *y,
-                    int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy);
-//uint8_t  spiread(void);
-
     bool  hwSPI;
     ////
     int16_t  cursor_x, cursor_y;
@@ -311,12 +294,8 @@ protected:
         _displayclipy2 = ST7735_max(0,ST7735_min(_clipy2+_originy, height()));
         _invisible = (_displayclipx1 == _displayclipx2 || _displayclipy1 == _displayclipy2);
         _standard =  (_displayclipx1 == 0) && (_displayclipx2 == _width) && (_displayclipy1 == 0) && (_displayclipy2 == _height);
-        if (Serial) {
-            //Serial.printf("UDC (%d %d)-(%d %d) %d %d\n", _displayclipx1, _displayclipy1, _displayclipx2, _displayclipy2, _invisible, _standard);
-        }
     }
 
-    int16_t _width, _height;
     int16_t scroll_x, scroll_y, scroll_width, scroll_height;
     bool scrollEnable,isWritingScrollArea; // If set, 'wrap' text at right edge of display
 
@@ -345,19 +324,10 @@ protected:
     int16_t	 _gfx_last_char_x_write = 0;
     uint16_t _gfx_last_char_textcolor;
     uint16_t _gfx_last_char_textbgcolor;
-    bool gfxFontLastCharPosFG(int16_t x, int16_t y);
 
-    void drawFontBits(bool opaque, uint32_t bits, uint32_t numbits, int32_t x, int32_t y, uint32_t repeat);
-    void drawFontPixel( uint8_t alpha, uint32_t x, uint32_t y );
-    uint32_t fetchpixel(const uint8_t *p, uint32_t index, uint32_t x);
+    virtual void Pixel(int16_t x, int16_t y, uint16_t color) {
 
-
-    uint16_t _colstart, _rowstart, _xstart, _ystart, _rot, _screenHeight, _screenWidth;
-
-    uint8_t  _cs, _rs, _rst, _sid, _sclk;
-  uint8_t pcs_data, pcs_command;
-  uint32_t ctar;
-  volatile uint8_t *datapin, *clkpin, *cspin, *rspin;
+    };
 
     virtual void HLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     {
@@ -423,7 +393,71 @@ protected:
         return (uint16_t)((result >> 16) | result); // contract result
     }
 
-    virtual void Pixel(int16_t x, int16_t y, uint16_t color)
+    virtual void writedata16(uint16_t d) {
+    }
+
+    virtual void writedata16_last(uint16_t d) {
+
+    }
+
+};
+
+class ST7735_t3 : public AbstractDisplay
+{
+
+public:
+
+    ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1);
+    ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1);
+
+    void     initB(void),                             // for ST7735B displays
+            initR(uint8_t options = INITR_GREENTAB); // for ST7735R
+
+
+ 
+
+    //////
+    int write(uint8_t) override;
+    int write(const uint8_t *buffer, size_t size) override;
+    
+////
+protected:
+    void sendCommand(uint8_t commandByte, const uint8_t *dataBytes, uint8_t numDataBytes);
+
+
+
+   
+    void setBitrate(uint32_t n);
+
+
+
+protected:
+
+    virtual void writedata16(uint16_t d) override;
+    virtual void writedata16_last(uint16_t d) override;
+    void    spiwrite(uint8_t),
+            spiwrite16(uint16_t d),
+            writecommand(uint8_t c),
+            writecommand_last(uint8_t c),
+            writedata(uint8_t d),
+
+            writedata_last(uint8_t d),
+            
+            commandList(const uint8_t *addr),
+            commonInit(const uint8_t *cmdList, uint8_t mode=0);
+    
+//uint8_t  spiread(void);
+
+    
+
+
+
+    uint8_t  _cs, _rs, _rst, _sid, _sclk;
+    uint8_t pcs_data, pcs_command;
+    uint32_t ctar;
+    volatile uint8_t *datapin, *clkpin, *cspin, *rspin;
+
+    virtual void Pixel(int16_t x, int16_t y, uint16_t color) override
     {
         x+=_originx;
         y+=_originy;

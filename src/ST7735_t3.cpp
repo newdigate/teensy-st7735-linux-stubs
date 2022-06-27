@@ -181,7 +181,7 @@ void ST7735_t3::initR(uint8_t options)
 }
 
 
-void ST7735_t3::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+void AbstractDisplay::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
     _windowx0 = x0;
     _windowy0 = y0;
@@ -190,7 +190,7 @@ void ST7735_t3::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1
 }
 
 
-void ST7735_t3::pushColor(uint16_t color, bool last_pixel)
+void AbstractDisplay::pushColor(uint16_t color, bool last_pixel)
 {
 
 }
@@ -199,7 +199,7 @@ void ST7735_t3::pushColor(uint16_t color, bool last_pixel)
 extern "C" const unsigned char glcdfont[];
 
 
-void ST7735_t3::drawPixel(int16_t x, int16_t y, uint16_t color)
+void AbstractDisplay::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
     x += _originx;
     y += _originy;
@@ -210,7 +210,7 @@ void ST7735_t3::drawPixel(int16_t x, int16_t y, uint16_t color)
 }
 
 
-void ST7735_t3::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
+void AbstractDisplay::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 {
     x+=_originx;
     y+=_originy;
@@ -223,7 +223,7 @@ void ST7735_t3::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 }
 
 
-void ST7735_t3::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+void AbstractDisplay::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
 {
     x+=_originx;
     y+=_originy;
@@ -237,13 +237,13 @@ void ST7735_t3::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
     HLine(x,y,w, color);
 }
 
-void ST7735_t3::fillScreen(uint16_t color)
+void AbstractDisplay::fillScreen(uint16_t color)
 {
     fillRect(0, 0,  _width, _height, color);
 }
 
 // fill a rectangle
-void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+void AbstractDisplay::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
     x+=_originx;
     y+=_originy;
@@ -271,7 +271,7 @@ void ST7735_t3::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
 #define MADCTL_BGR 0x08
 #define MADCTL_MH  0x04
 
-void ST7735_t3::setRotation(uint8_t m)
+void AbstractDisplay::setRotation(uint8_t m)
 {
     rotation = m % 4; // can't be higher than 3
     switch (rotation) {
@@ -314,14 +314,14 @@ void ST7735_t3::setRotation(uint8_t m)
     cursor_y = 0;
 }
 
-void ST7735_t3::setRowColStart(uint16_t x, uint16_t y) {
+void AbstractDisplay::setRowColStart(uint16_t x, uint16_t y) {
     _rowstart = x;
     _colstart = y;
     if (_rot != 0xff) setRotation(_rot);
 }
 
 
-void ST7735_t3::invertDisplay(bool i)
+void AbstractDisplay::invertDisplay(bool i)
 {
 }
 
@@ -335,7 +335,7 @@ void ST7735_t3::sendCommand(uint8_t commandByte, const uint8_t *dataBytes, uint8
 
 }
 
-uint16_t ST7735_t3::readPixel(int16_t x, int16_t y)
+uint16_t AbstractDisplay::readPixel(int16_t x, int16_t y)
 {
     uint16_t colors = 0;
     readRect(x, y, 1, 1, &colors);
@@ -344,7 +344,7 @@ uint16_t ST7735_t3::readPixel(int16_t x, int16_t y)
 
 
 // Now lets see if we can read in multiple pixels
-void ST7735_t3::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors)
+void AbstractDisplay::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *pcolors)
 {
     /*
     // Use our Origin.
@@ -367,7 +367,7 @@ void ST7735_t3::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *p
 }
 
 // Now lets see if we can writemultiple pixels
-void ST7735_t3::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors)
+void AbstractDisplay::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors)
 {
     x+=_originx;
     y+=_originy;
@@ -425,7 +425,7 @@ void ST7735_t3::writeRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint
 ///
 ///
 // Draw a rectangle
-void ST7735_t3::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+void AbstractDisplay::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
 
     drawFastHLine(x, y, w, color);
@@ -435,7 +435,7 @@ void ST7735_t3::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t co
 }
 
 // Draw a rounded rectangle
-void ST7735_t3::drawRoundRect(int16_t x, int16_t y, int16_t w,
+void AbstractDisplay::drawRoundRect(int16_t x, int16_t y, int16_t w,
                               int16_t h, int16_t r, uint16_t color) {
     // smarter version
     drawFastHLine(x+r  , y    , w-2*r, color); // Top
@@ -450,7 +450,7 @@ void ST7735_t3::drawRoundRect(int16_t x, int16_t y, int16_t w,
 }
 
 // Fill a rounded rectangle
-void ST7735_t3::fillRoundRect(int16_t x, int16_t y, int16_t w,
+void AbstractDisplay::fillRoundRect(int16_t x, int16_t y, int16_t w,
                               int16_t h, int16_t r, uint16_t color) {
     // smarter version
     fillRect(x+r, y, w-2*r, h, color);
@@ -461,7 +461,7 @@ void ST7735_t3::fillRoundRect(int16_t x, int16_t y, int16_t w,
 }
 
 // Draw a triangle
-void ST7735_t3::drawTriangle(int16_t x0, int16_t y0,
+void AbstractDisplay::drawTriangle(int16_t x0, int16_t y0,
                              int16_t x1, int16_t y1,
                              int16_t x2, int16_t y2, uint16_t color) {
     drawLine(x0, y0, x1, y1, color);
@@ -470,7 +470,7 @@ void ST7735_t3::drawTriangle(int16_t x0, int16_t y0,
 }
 
 // Fill a triangle
-void ST7735_t3::fillTriangle ( int16_t x0, int16_t y0,
+void AbstractDisplay::fillTriangle ( int16_t x0, int16_t y0,
                                int16_t x1, int16_t y1,
                                int16_t x2, int16_t y2, uint16_t color) {
 
@@ -548,7 +548,7 @@ void ST7735_t3::fillTriangle ( int16_t x0, int16_t y0,
 }
 
 // Draw a circle outline
-void ST7735_t3::drawCircle(int16_t x0, int16_t y0, int16_t r,
+void AbstractDisplay::drawCircle(int16_t x0, int16_t y0, int16_t r,
                            uint16_t color) {
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
@@ -582,7 +582,7 @@ void ST7735_t3::drawCircle(int16_t x0, int16_t y0, int16_t r,
     }
 }
 
-void ST7735_t3::drawCircleHelper( int16_t x0, int16_t y0,
+void AbstractDisplay::drawCircleHelper( int16_t x0, int16_t y0,
                                   int16_t r, uint8_t cornername, uint16_t color) {
     int16_t f     = 1 - r;
     int16_t ddF_x = 1;
@@ -618,14 +618,14 @@ void ST7735_t3::drawCircleHelper( int16_t x0, int16_t y0,
     }
 }
 
-void ST7735_t3::fillCircle(int16_t x0, int16_t y0, int16_t r,
+void AbstractDisplay::fillCircle(int16_t x0, int16_t y0, int16_t r,
                            uint16_t color) {
     drawFastVLine(x0, y0-r, 2*r+1, color);
     fillCircleHelper(x0, y0, r, 3, 0, color);
 }
 
 // Used to do circles and roundrects
-void ST7735_t3::fillCircleHelper(int16_t x0, int16_t y0, int16_t r,
+void AbstractDisplay::fillCircleHelper(int16_t x0, int16_t y0, int16_t r,
                                  uint8_t cornername, int16_t delta, uint16_t color) {
 
     int16_t f     = 1 - r;
@@ -656,7 +656,7 @@ void ST7735_t3::fillCircleHelper(int16_t x0, int16_t y0, int16_t r,
 }
 
 // Bresenham's algorithm - thx wikpedia
-void ST7735_t3::drawLine(int16_t x0, int16_t y0,
+void AbstractDisplay::drawLine(int16_t x0, int16_t y0,
                          int16_t x1, int16_t y1, uint16_t color)
 {
     bool steep = abs(y1 - y0) > abs(x1 - x0);
@@ -730,7 +730,7 @@ void ST7735_t3::drawLine(int16_t x0, int16_t y0,
 #endif
 }
 
-void ST7735_t3::drawBitmap(int16_t x, int16_t y,
+void AbstractDisplay::drawBitmap(int16_t x, int16_t y,
                            const uint8_t *bitmap, int16_t w, int16_t h,
                            uint16_t color) {
 
@@ -745,14 +745,14 @@ void ST7735_t3::drawBitmap(int16_t x, int16_t y,
     }
 }
 
-void ST7735_t3::setCursor(int16_t x, int16_t y, bool autoCenter) {
+void AbstractDisplay::setCursor(int16_t x, int16_t y, bool autoCenter) {
     _center_x_text = autoCenter;	// remember the state.
     _center_y_text = autoCenter;	// remember the state.
-    if (x == ST7735_t3::CENTER) {
+    if (x == AbstractDisplay::CENTER) {
         _center_x_text = true;
         x = _width/2;
     }
-    if (y == ST7735_t3::CENTER) {
+    if (y == AbstractDisplay::CENTER) {
         _center_y_text = true;
         y = _height/2;
     }
@@ -772,34 +772,34 @@ void ST7735_t3::setCursor(int16_t x, int16_t y, bool autoCenter) {
 
 }
 
-void ST7735_t3::getCursor(int16_t *x, int16_t *y) {
+void AbstractDisplay::getCursor(int16_t *x, int16_t *y) {
     *x = cursor_x;
     *y = cursor_y;
 }
 
-void ST7735_t3::setTextSize(uint8_t s_x, uint8_t s_y) {
+void AbstractDisplay::setTextSize(uint8_t s_x, uint8_t s_y) {
     textsize_x = (s_x > 0) ? s_x : 1;
     textsize_y = (s_y > 0) ? s_y : 1;
 }
 
-uint8_t ST7735_t3::getTextSize() {
+uint8_t AbstractDisplay::getTextSize() {
     return textsize_x;	// bug bug 2 values now
 }
 
-uint8_t ST7735_t3::getTextSizeX() {
+uint8_t AbstractDisplay::getTextSizeX() {
     return textsize_x;
 }
-uint8_t ST7735_t3::getTextSizeY() {
+uint8_t AbstractDisplay::getTextSizeY() {
     return textsize_y;
 }
 
-void ST7735_t3::setTextColor(uint16_t c) {
+void AbstractDisplay::setTextColor(uint16_t c) {
     // For 'transparent' background, we'll set the bg
     // to the same as fg instead of using a flag
     textcolor = textbgcolor = c;
 }
 
-void ST7735_t3::setTextColor(uint16_t c, uint16_t b) {
+void AbstractDisplay::setTextColor(uint16_t c, uint16_t b) {
     textcolor   = c;
     textbgcolor = b;
     // pre-expand colors for fast alpha-blending later
@@ -807,16 +807,16 @@ void ST7735_t3::setTextColor(uint16_t c, uint16_t b) {
     textbgcolorPrexpanded = (textbgcolor | (textbgcolor << 16)) & 0b00000111111000001111100000011111;
 }
 
-void ST7735_t3::setTextWrap(bool w) {
+void AbstractDisplay::setTextWrap(bool w) {
     wrap = w;
 }
 
-bool ST7735_t3::getTextWrap()
+bool AbstractDisplay::getTextWrap()
 {
     return wrap;
 }
 
-uint8_t ST7735_t3::getRotation(void) {
+uint8_t AbstractDisplay::getRotation(void) {
     return _rot;
 }
 
@@ -825,7 +825,7 @@ uint8_t ST7735_t3::getRotation(void) {
 ** Function name:           setTextDatum
 ** Description:             Set the text position reference datum
 ***************************************************************************************/
-void ST7735_t3::setTextDatum(uint8_t d)
+void AbstractDisplay::setTextDatum(uint8_t d)
 {
     textdatum = d;
 }
@@ -835,7 +835,7 @@ void ST7735_t3::setTextDatum(uint8_t d)
 ** Function name:           drawNumber
 ** Description:             draw a long integer
 ***************************************************************************************/
-int16_t ST7735_t3::drawNumber(long long_num, int poX, int poY)
+int16_t AbstractDisplay::drawNumber(long long_num, int poX, int poY)
 {
     char str[14];
     sprintf(str, "%ld", long_num);
@@ -843,7 +843,7 @@ int16_t ST7735_t3::drawNumber(long long_num, int poX, int poY)
 }
 
 
-int16_t ST7735_t3::drawFloat(float floatNumber, int dp, int poX, int poY)
+int16_t AbstractDisplay::drawFloat(float floatNumber, int dp, int poX, int poY)
 {
     char str[14];               // Array to contain decimal string
     uint8_t ptr = 0;            // Initialise pointer for array
@@ -853,6 +853,7 @@ int16_t ST7735_t3::drawFloat(float floatNumber, int dp, int poX, int poY)
     char *format2 = "%%.%df";
     sprintf(format2, format, dp);
     sprintf(str, format2, floatNumber);
+    return 0;
 }
 
 /***************************************************************************************
@@ -860,13 +861,13 @@ int16_t ST7735_t3::drawFloat(float floatNumber, int dp, int poX, int poY)
 ** Description :            draw string with padding if it is defined
 ***************************************************************************************/
 // Without font number, uses font set by setTextFont()
-int16_t ST7735_t3::drawString(const String& string, int poX, int poY)
+int16_t AbstractDisplay::drawString(const String& string, int poX, int poY)
 {
     int16_t len = string.length() + 2;
     return drawString1((char*)string.c_str(), string.length(), poX, poY);
 }
 
-int16_t ST7735_t3::drawString1(char string[], int16_t len, int poX, int poY)
+int16_t AbstractDisplay::drawString1(char string[], int16_t len, int poX, int poY)
 {
     int16_t sumX = 0;
     uint8_t padding = 1/*, baseline = 0*/;
@@ -953,7 +954,7 @@ int16_t ST7735_t3::drawString1(char string[], int16_t len, int poX, int poY)
 }
 
 
-void ST7735_t3::scrollTextArea(uint8_t scrollSize){
+void AbstractDisplay::scrollTextArea(uint8_t scrollSize){
     uint16_t awColors[scroll_width];
     for (int y=scroll_y+scrollSize; y < (scroll_y+scroll_height); y++) {
         readRect(scroll_x, y, scroll_width, 1, awColors);
@@ -962,27 +963,27 @@ void ST7735_t3::scrollTextArea(uint8_t scrollSize){
     fillRect(scroll_x, (scroll_y+scroll_height)-scrollSize, scroll_width, scrollSize, scrollbgcolor);
 }
 
-void ST7735_t3::setScrollTextArea(int16_t x, int16_t y, int16_t w, int16_t h){
+void AbstractDisplay::setScrollTextArea(int16_t x, int16_t y, int16_t w, int16_t h){
     scroll_x = x;
     scroll_y = y;
     scroll_width = w;
     scroll_height = h;
 }
 
-void ST7735_t3::setScrollBackgroundColor(uint16_t color){
+void AbstractDisplay::setScrollBackgroundColor(uint16_t color){
     scrollbgcolor=color;
     fillRect(scroll_x,scroll_y,scroll_width,scroll_height,scrollbgcolor);
 }
 
-void ST7735_t3::enableScroll(void){
+void AbstractDisplay::enableScroll(void){
     scrollEnable = true;
 }
 
-void ST7735_t3::disableScroll(void){
+void AbstractDisplay::disableScroll(void){
     scrollEnable = false;
 }
 
-void ST7735_t3::resetScrollBackgroundColor(uint16_t color){
+void AbstractDisplay::resetScrollBackgroundColor(uint16_t color){
     scrollbgcolor=color;
 }
 
@@ -1072,7 +1073,7 @@ int ST7735_t3::write(const uint8_t *buffer, size_t size)
 }
 
 // Draw a character
-void ST7735_t3::drawChar(int16_t x, int16_t y, unsigned char c,
+void AbstractDisplay::drawChar(int16_t x, int16_t y, unsigned char c,
                          uint16_t fgcolor, uint16_t bgcolor, uint8_t size_x, uint8_t size_y)
 {
     if((x >= _width)            || // Clip right
@@ -1235,7 +1236,7 @@ void ST7735_t3::drawChar(int16_t x, int16_t y, unsigned char c,
     }
 }
 
-void ST7735_t3::setFont(const ILI9341_t3_font_t &f) {
+void AbstractDisplay::setFont(const ILI9341_t3_font_t &f) {
     font = &f;
     _gfx_last_char_x_write = 0;	// Don't use cached data here
     if (gfxFont) {
@@ -1256,7 +1257,7 @@ void ST7735_t3::setFont(const ILI9341_t3_font_t &f) {
 }
 
 // Maybe support GFX Fonts as well?
-void ST7735_t3::setFont(const GFXfont *f) {
+void AbstractDisplay::setFont(const GFXfont *f) {
     font = NULL;	// turn off the other font...
     _gfx_last_char_x_write = 0;	// Don't use cached data here
     if (f == gfxFont) return;	// same font or lack of so can bail.
@@ -1353,7 +1354,7 @@ static uint32_t fetchbits_signed(const uint8_t *p, uint32_t index, uint32_t requ
     return (int32_t)val;
 }
 
-uint32_t ST7735_t3::fetchpixel(const uint8_t *p, uint32_t index, uint32_t x)
+uint32_t AbstractDisplay::fetchpixel(const uint8_t *p, uint32_t index, uint32_t x)
 {
     // The byte
     uint8_t b = p[index >> 3];
@@ -1363,7 +1364,7 @@ uint32_t ST7735_t3::fetchpixel(const uint8_t *p, uint32_t index, uint32_t x)
     return (b >> s) & fontbppmask;
 }
 
-void ST7735_t3::drawFontChar(unsigned int c)
+void AbstractDisplay::drawFontChar(unsigned int c)
 {
     uint32_t bitoffset;
     const uint8_t *data;
@@ -1830,7 +1831,7 @@ void ST7735_t3::drawFontChar(unsigned int c)
 }
 
 //strPixelLen			- gets pixel length of given ASCII string
-int16_t ST7735_t3::strPixelLen(const char * str)
+int16_t AbstractDisplay::strPixelLen(const char * str)
 {
 //	//Serial.printf("strPixelLen %s\n", str);
     if (!str) return(0);
@@ -1915,7 +1916,7 @@ int16_t ST7735_t3::strPixelLen(const char * str)
     return( maxlen );
 }
 
-void ST7735_t3::charBounds(char c, int16_t *x, int16_t *y,
+void AbstractDisplay::charBounds(char c, int16_t *x, int16_t *y,
                            int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy) {
 
     // BUGBUG:: Not handling offset/clip
@@ -2035,7 +2036,7 @@ void ST7735_t3::charBounds(char c, int16_t *x, int16_t *y,
 }
 
 // Add in Adafruit versions of text bounds calculations.
-void ST7735_t3::getTextBounds(const uint8_t *buffer, uint16_t len, int16_t x, int16_t y,
+void AbstractDisplay::getTextBounds(const uint8_t *buffer, uint16_t len, int16_t x, int16_t y,
                               int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
     *x1 = x;
     *y1 = y;
@@ -2055,7 +2056,7 @@ void ST7735_t3::getTextBounds(const uint8_t *buffer, uint16_t len, int16_t x, in
         *h  = maxy - miny + 1;
     }
 }
-void ST7735_t3::getTextBounds(const char *str, int16_t x, int16_t y,
+void AbstractDisplay::getTextBounds(const char *str, int16_t x, int16_t y,
                               int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
     uint8_t c; // Current character
 
@@ -2078,7 +2079,7 @@ void ST7735_t3::getTextBounds(const char *str, int16_t x, int16_t y,
     }
 }
 
-void ST7735_t3::getTextBounds(const String &str, int16_t x, int16_t y,
+void AbstractDisplay::getTextBounds(const String &str, int16_t x, int16_t y,
                               int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
     if (str.length() != 0) {
         getTextBounds(const_cast<char*>(str.c_str()), x, y, x1, y1, w, h);
@@ -2087,7 +2088,7 @@ void ST7735_t3::getTextBounds(const String &str, int16_t x, int16_t y,
 
 
 
-void ST7735_t3::drawFontPixel( uint8_t alpha, uint32_t x, uint32_t y ){
+void AbstractDisplay::drawFontPixel( uint8_t alpha, uint32_t x, uint32_t y ){
     // Adjust alpha based on the number of alpha levels supported by the font (based on bpp)
     // Note: Implemented look-up table for alpha, but made absolutely no difference in speed (T3.6)
     alpha = (uint8_t)(alpha * fontalphamx);
@@ -2095,7 +2096,7 @@ void ST7735_t3::drawFontPixel( uint8_t alpha, uint32_t x, uint32_t y ){
     Pixel(x,y,(uint16_t)((result >> 16) | result));
 }
 
-void ST7735_t3::drawFontBits(bool opaque, uint32_t bits, uint32_t numbits, int32_t x, int32_t y, uint32_t repeat)
+void AbstractDisplay::drawFontBits(bool opaque, uint32_t bits, uint32_t numbits, int32_t x, int32_t y, uint32_t repeat)
 {
     if (bits == 0) {
         if (opaque) {
@@ -2142,7 +2143,7 @@ void ST7735_t3::drawFontBits(bool opaque, uint32_t bits, uint32_t numbits, int32
     }
 }
 
-void ST7735_t3::drawGFXFontChar(unsigned int c) {
+void AbstractDisplay::drawGFXFontChar(unsigned int c) {
     // Lets do Adafruit GFX character output here as well
     if(c == '\r') 	 return;
 
@@ -2473,7 +2474,7 @@ void ST7735_t3::drawGFXFontChar(unsigned int c) {
 //	int16_t   _gfx_last_cursor_x, _gfx_last_cursor_y;
 //	int16_t	 _gfx_last_x_overlap = 0;
 
-bool ST7735_t3::gfxFontLastCharPosFG(int16_t x, int16_t y) {
+bool AbstractDisplay::gfxFontLastCharPosFG(int16_t x, int16_t y) {
     GFXglyph *glyph  = gfxFont->glyph + (_gfx_c_last -  gfxFont->first);
 
     uint8_t   w     = glyph->width,
