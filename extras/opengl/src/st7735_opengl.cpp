@@ -3,6 +3,7 @@
 //
 
 #include "st7735_opengl.h"
+#include "Arduino.h"
 
 GLFWwindow *st7735_opengl::window = nullptr;
 uint16_t st7735_opengl::textureImage[128*128] = {0};
@@ -15,6 +16,11 @@ unsigned int st7735_opengl::VBO;
 unsigned int st7735_opengl::VAO;
 unsigned int st7735_opengl::EBO;
 bool  st7735_opengl::_initialized = false;
+string st7735_opengl::_textCharacterInput;
+Encoder * st7735_opengl::_encoderUpDown = nullptr;
+Encoder * st7735_opengl::_encoderLeftRight = nullptr;
+Bounce2::Button * st7735_opengl:: _button = nullptr;
+
 void st7735_opengl::updateScreen() {
 
 }
@@ -191,7 +197,11 @@ void st7735_opengl::collectWindowClose(GLFWwindow* window)
     arduino_should_exit = true;
 }
 
-st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2){
+st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize, Encoder *encoderUpDown, Encoder *encoderLeftRight, Bounce2::Button *button): ST7735_t3(1,2){
+
+    _encoderLeftRight = encoderLeftRight;
+    _encoderUpDown = encoderUpDown;
+    _button = button;
 
     _drawFrame = drawFrame;
     _frameSize = frameSize;
@@ -224,6 +234,9 @@ st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2)
 
     //glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     glfwSetWindowCloseCallback(window, collectWindowClose);
+
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetCharCallback(window, character_callback);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -345,6 +358,75 @@ st7735_opengl::st7735_opengl(bool drawFrame, int16_t frameSize) : ST7735_t3(1,2)
         }
     */
     _initialized = true;
+}
+
+void st7735_opengl::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_RELEASE) {
+        switch(key) {
+            case GLFW_KEY_SPACE: {
+                if (_button != nullptr) {
+                    _button->setState(false);
+                }
+                break;
+            }
+        }
+    } else if (action == GLFW_PRESS)
+    {
+        switch(key) {
+            case GLFW_KEY_SPACE: {
+                if (_button != nullptr) {
+                    _button->setState(true);
+                }
+                break;
+            }
+            case GLFW_KEY_UP: {
+                if (_encoderUpDown != nullptr) {
+                    _encoderUpDown->increase(-4);
+                }
+                break;
+            }
+            case GLFW_KEY_DOWN: {
+                if (_encoderUpDown != nullptr) {
+                    _encoderUpDown->increase(4);
+                }
+                break;
+            }
+            case GLFW_KEY_LEFT: {
+                if (_encoderLeftRight != nullptr) {
+                    _encoderLeftRight->increase(-4);
+                }
+                break;
+            }
+            case GLFW_KEY_RIGHT: {
+                if (_encoderUpDown != nullptr) {
+                    _encoderLeftRight->increase(4);
+                }
+                break;
+            }
+            case GLFW_KEY_ENTER: {
+                char *s = new char[_textCharacterInput.length()];
+                memcpy(s, _textCharacterInput.c_str(), _textCharacterInput.length());
+                Serial.queueSimulatedCharacterInput(s, _textCharacterInput.length());
+                delete [] s;
+
+                char c = '\n';
+                Serial.queueSimulatedCharacterInput(&c, 1);
+
+                _textCharacterInput.clear();
+
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+
+void st7735_opengl::character_callback(GLFWwindow* window, unsigned int codepoint)
+{
+    char c = (char) codepoint;
+    _textCharacterInput += c;
 }
 
 bool st7735_opengl::shouldClose() {

@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include "ST7735_t3.h"
+#include <Encoder.h>
+#include <Bounce2.h>
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #define GLFW_INCLUDE_NONE
@@ -59,9 +61,12 @@ public:
     static int16_t _frameSize;
     // vao and vbo handle
     static unsigned int VBO, VAO, EBO;
+    static Encoder *_encoderUpDown;
+    static Encoder *_encoderLeftRight;
+    static Bounce2::Button *_button;
 
     st7735_opengl(bool drawFrame);
-    st7735_opengl(bool drawFrame, int16_t frameSize);
+    st7735_opengl(bool drawFrame, int16_t frameSize, Encoder *encoderUpDown = nullptr, Encoder *encoderLeftRight = nullptr, Bounce2::Button *button=nullptr);
     st7735_opengl();
 
     void Pixel(int16_t x, int16_t y, uint16_t color) override;
@@ -86,7 +91,11 @@ public:
     static void collectWindowClose(GLFWwindow* window);
 private:
     bool _drawFrame = false;
+    static string _textCharacterInput;
     static bool _initialized;
+    static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void character_callback(GLFWwindow* window, unsigned int codepoint);
+
 };
 
 

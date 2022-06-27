@@ -12,6 +12,7 @@ set(APP_SOURCES graphicstest.cpp)
 add_executable(basic  ${APP_SOURCES})
 
 target_link_libraries(basic ${teensy_x86_stubs_LIBS})
+target_link_libraries(basic ${teensy_x86_bounce2_stubs_LIBS})
 target_link_libraries(basic ${teensy_st7735_linux_stubs_LIBS})
 target_link_libraries(basic ${teensy_st7735_linux_extras_opengl_LIBS})
 target_link_libraries(basic ${LIBS})

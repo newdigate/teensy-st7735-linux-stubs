@@ -13,6 +13,7 @@ set(APP_SOURCES scrolltest.cpp)
 add_executable(scrolltest  ${APP_SOURCES})
 
 target_link_libraries(scrolltest ${teensy_x86_stubs_LIBS})
+target_link_libraries(scrolltest ${teensy_x86_bounce2_stubs_LIBS})
 target_link_libraries(scrolltest ${teensy_st7735_linux_stubs_LIBS})
 target_link_libraries(scrolltest ${teensy_st7735_linux_extras_opengl_LIBS})
 target_link_libraries(scrolltest ${LIBS})

@@ -4,13 +4,20 @@ set(teensy_st7735_linux_opengl_VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(teensy_x86_stubs)
+message(INFO teensy_x86_stubs_INCLUDE_DIR ${teensy_x86_stubs_INCLUDE_DIR})
 include_directories(${teensy_x86_stubs_INCLUDE_DIR})
 
 find_package(teensy_x86_sd_stubs)
 include_directories(${teensy_x86_sd_stubs_INCLUDE_DIR})
 
+find_package(teensy_x86_bounce2_stubs)
+include_directories(${teensy_x86_bounce2_stubs_INCLUDE_DIR})
+
 find_package(teensy_st7735_linux_stubs)
 include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
+
+find_package(teensy_x86_encoder_stubs)
+include_directories(${teensy_x86_encoder_stubs_INCLUDE_DIR})
 
 include(../opengl.cmake.in)
 
