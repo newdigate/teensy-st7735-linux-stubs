@@ -21,27 +21,25 @@
 
 #include "Arduino.h"
 #include "AbstractDisplay.h"
-
 #include "ILI9341_fonts.h"
 #include <cmath>
+
 #define INITR_GREENTAB 0x0
 #define INITR_REDTAB   0x1
 #define INITR_BLACKTAB 0x2
 
-#define INITR_18GREENTAB    INITR_GREENTAB
-#define INITR_18REDTAB      INITR_REDTAB
-#define INITR_18BLACKTAB    INITR_BLACKTAB
-#define INITR_144GREENTAB   0x1
-#define INITR_144GREENTAB_OFFSET   0x4
-#define INITR_MINI160x80  0x05
-#define INITR_MINI160x80_ST7735S 0x06
+#define INITR_18GREENTAB            INITR_GREENTAB
+#define INITR_18REDTAB              INITR_REDTAB
+#define INITR_18BLACKTAB            INITR_BLACKTAB
+#define INITR_144GREENTAB           0x1
+#define INITR_144GREENTAB_OFFSET    0x4
+#define INITR_MINI160x80            0x05
+#define INITR_MINI160x80_ST7735S    0x06
 
-#define ST7735_TFTWIDTH  128
-#define ST7735_TFTWIDTH_80     80 // for mini
-// for 1.44" display
-#define ST7735_TFTHEIGHT_144 128
-// for 1.8" display and mini
-#define ST7735_TFTHEIGHT_160  160 // for 1.8" and mini display
+#define ST7735_TFTWIDTH             128
+#define ST7735_TFTWIDTH_80          80 // for mini
+#define ST7735_TFTHEIGHT_144        128 // for 1.44" display
+#define ST7735_TFTHEIGHT_160        160 // for 1.8" and mini display
 
 #define ST7735_NOP     0x00
 #define ST7735_RAMWR   0x2C
@@ -88,36 +86,20 @@
 #define ST7735_min(a, b) ((a < b)? a : b )
 #define ST7735_max(a, b) ((a > b)? a : b )
 
-class ST7735_t3 : public AbstractDisplay
-{
-
+class ST7735_t3 : public AbstractDisplay {
 public:
-
     ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1);
     ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1);
 
-    void     initB(void),                             // for ST7735B displays
+    void    initB(void),                             // for ST7735B displays
             initR(uint8_t options = INITR_GREENTAB); // for ST7735R
 
-
- 
-
-    //////
-
     virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) override;
-////
 protected:
     void sendCommand(uint8_t commandByte, const uint8_t *dataBytes, uint8_t numDataBytes);
-
-
-
-   
     void setBitrate(uint32_t n);
 
-
-
 protected:
-
     virtual void writedata16(uint16_t d) override;
     virtual void writedata16_last(uint16_t d) override;
     void    spiwrite(uint8_t),
@@ -131,12 +113,6 @@ protected:
             commandList(const uint8_t *addr),
             commonInit(const uint8_t *cmdList, uint8_t mode=0);
     
-//uint8_t  spiread(void);
-
-    
-
-
-
     uint8_t  _cs, _rs, _rst, _sid, _sclk;
     uint8_t pcs_data, pcs_command;
     uint32_t ctar;
