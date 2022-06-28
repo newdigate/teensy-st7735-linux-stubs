@@ -103,8 +103,7 @@ public:
  
 
     //////
-    int write(uint8_t) override;
-    int write(const uint8_t *buffer, size_t size) override;
+
     virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) override;
 ////
 protected:
