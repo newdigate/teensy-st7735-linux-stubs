@@ -1,6 +1,6 @@
 #include "st7735_opengl.h"
 #include "st7735_opengl_main.h"
-st7735_opengl tft = st7735_opengl(true, 10);
+st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 float p = 3.1415926;
 

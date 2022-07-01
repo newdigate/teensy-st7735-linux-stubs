@@ -69,7 +69,26 @@ typedef struct {
 
 class AbstractDisplay : public Print {
 public:
-    AbstractDisplay() : Print() {
+    AbstractDisplay(unsigned short width, unsigned short height) : 
+        Print(),
+        _width(width),
+        _height(height)
+    {
+        _screenHeight = height;
+        _screenWidth = width;
+
+        _width = _screenWidth;
+        _height = _screenHeight;
+
+        cursor_y  = cursor_x    = 0;
+        textsize_x  = 1;
+        textsize_y  = 1;
+        textcolor = textbgcolor = 0xFFFF;
+        wrap      = true;
+        font      = NULL;
+        gfxFont   = NULL;
+        setClipRect();
+        setOrigin();
     }
     virtual ~AbstractDisplay() {
 
@@ -281,7 +300,7 @@ protected:
     uint16_t _gfx_last_char_textbgcolor;
 
     virtual void Pixel(int16_t x, int16_t y, uint16_t color) {
-
+        drawPixel(x, y, color);
     };
 
     virtual void HLine(int16_t x, int16_t y, int16_t w, uint16_t color)

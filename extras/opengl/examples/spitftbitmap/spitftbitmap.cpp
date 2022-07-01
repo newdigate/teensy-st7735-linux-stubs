@@ -29,7 +29,7 @@
 #include "parrot.h"
 #define SD_CS 4
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
-st7735_opengl tft = st7735_opengl(true, 10);
+st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 void bmpDraw(const char *filename, uint8_t x, uint16_t y);
 uint16_t read16();
@@ -86,12 +86,12 @@ int main() {
     Serial.print("OK!\n");
     bmpDraw("parrot.bmp", 0, 0);
     tft.updateScreen();
-    while(!tft.shouldClose()) {
-        tft.updateScreen();
-        delay(10);
-    }
 }
 
+void loop() {
+    tft.updateScreen();
+    delay(10);
+ }
 // This function opens a Windows Bitmap (BMP) file and
 // displays it at the given coordinates.  It's sped up
 // by reading many pixels worth of data at a time

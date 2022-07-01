@@ -14,15 +14,16 @@
  ****************************************************/
 
 #include "st7735_opengl.h"
+#include "st7735_opengl_main.h"
 #include "st7735_t3_font_ComicSansMS.h"
 
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
-st7735_opengl tft = st7735_opengl(true, 10);
+st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 int st7735_main(int argc, char** argv) {
 }
 
-int main() {
+void setup() {
 
     Serial.begin(9600);
 
@@ -70,11 +71,10 @@ int main() {
         tft.updateScreen();
         delay(500);
     }
-
-    while(!tft.shouldClose()) {
-        tft.updateScreen();
-        delay(10);
-    }
 }
 
+void loop() {
+    tft.updateScreen();
+    delay(10);
+ }
 

@@ -24,14 +24,11 @@ include(../opengl.cmake.in)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/teensy_st7735_linux_opengl/)
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/teensy_st7735_linux_opengl )
 
-set(SOURCE_FILES
-        st7735_opengl.cpp)
-
 set(HEADER_FILES
         st7735_opengl.h
         st7735_opengl_main.h)
 
-add_library(teensy_st7735_linux_opengl SHARED STATIC ${HEADER_FILES} ${SOURCE_FILES})
+add_library(teensy_st7735_linux_opengl INTERFACE ${HEADER_FILES})
 
 set_target_properties(teensy_st7735_linux_opengl PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
