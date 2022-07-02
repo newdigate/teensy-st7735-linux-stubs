@@ -1,5 +1,15 @@
 #include "st7735_opengl.h"
 #include "st7735_opengl_main.h"
+
+#define ST7735_BLACK 0x0000
+#define ST7735_WHITE 0xFFFF
+#define ST7735_RED 0xF800
+#define ST7735_GREEN 0x07E0
+#define ST7735_BLUE 0x001F
+#define ST7735_CYAN 0x07FF
+#define ST7735_MAGENTA 0xF81F
+#define ST7735_YELLOW 0xFFE0
+#define ST7735_ORANGE 0xFC00
 st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 float p = 3.1415926;
@@ -20,7 +30,6 @@ int st7735_main(int argc, char** argv) {
 }
 
 void setup() {
-    tft.initR(INITR_GREENTAB);
     tft.useFrameBuffer(true);
     tft.updateScreenAsync(true);
 }

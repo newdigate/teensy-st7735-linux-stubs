@@ -6,9 +6,8 @@
 #define TEENSY_ST7735_LINUX_ST7735_OPENGL_H
 
 #include <iostream>
-#include "ST7735_t3.h"
-#include <Encoder.h>
-#include <Bounce2.h>
+#include <Arduino.h>
+#include "View.h"
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #define GLFW_INCLUDE_NONE
@@ -320,7 +319,7 @@ unsigned int st7735_opengl_window::EBO;
 int16_t st7735_opengl_window::_frameSize = 0;
 
 template <typename TEncoder, typename TButton>
-class st7735_opengl : public ST7735_t3 {
+class st7735_opengl : public View {
 public:
     static TEncoder *_encoderUpDown;
     static TEncoder *_encoderLeftRight;
@@ -332,7 +331,7 @@ public:
     st7735_opengl(bool drawFrame) : st7735_opengl(drawFrame, 20) {
     }
 
-    st7735_opengl(bool drawFrame, int16_t frameSize, TEncoder *encoderUpDown = nullptr, TEncoder *encoderLeftRight = nullptr, TButton *button = nullptr): ST7735_t3(1,2){
+    st7735_opengl(bool drawFrame, int16_t frameSize, TEncoder *encoderUpDown = nullptr, TEncoder *encoderLeftRight = nullptr, TButton *button = nullptr): View(128, 128){
         _encoderLeftRight = encoderLeftRight;
         _encoderUpDown = encoderUpDown;
         _button = button;

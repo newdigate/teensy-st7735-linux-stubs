@@ -47,7 +47,7 @@ int main() {
     // only uncomment one of these display initializers.
     // ST7735 - More options mentioned in examples for st7735_t3 library
     //tft.initR(INITR_BLACKTAB); // if you're using a 1.8" TFT 128x160 displays
-    tft.initR(INITR_144GREENTAB); // if you're using a 1.44" TFT (128x128)
+    //tft.initR(INITR_144GREENTAB); // if you're using a 1.44" TFT (128x128)
     //tft.initR(INITR_MINI160x80);  //if you're using a .96" TFT(160x80)
 
     // ST7789
