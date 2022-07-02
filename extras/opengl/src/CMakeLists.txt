@@ -13,6 +13,9 @@ include_directories(${teensy_x86_sd_stubs_INCLUDE_DIR})
 find_package(teensy_x86_bounce2_stubs)
 include_directories(${teensy_x86_bounce2_stubs_INCLUDE_DIR})
 
+find_package(teensy_gfx)
+include_directories(${teensy_gfx_INCLUDE_DIR})
+
 find_package(teensy_st7735_linux_stubs)
 include_directories(${teensy_st7735_linux_stubs_INCLUDE_DIR})
 

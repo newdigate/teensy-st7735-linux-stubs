@@ -20,7 +20,7 @@
 #define __ST7735_t3_H_
 
 #include "Arduino.h"
-#include "AbstractDisplay.h"
+#include "View.h"
 #include "ILI9341_fonts.h"
 #include <cmath>
 
@@ -86,7 +86,7 @@
 #define ST7735_min(a, b) ((a < b)? a : b )
 #define ST7735_max(a, b) ((a > b)? a : b )
 
-class ST7735_t3 : public AbstractDisplay {
+class ST7735_t3 : public View {
 public:
     ST7735_t3(uint8_t CS, uint8_t RS, uint8_t SID, uint8_t SCLK, uint8_t RST = -1);
     ST7735_t3(uint8_t CS, uint8_t RS, uint8_t RST = -1);

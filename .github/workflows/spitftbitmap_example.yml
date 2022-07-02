@@ -27,6 +27,11 @@ jobs:
           repository: newdigate/teensy-x86-sd-stubs
           path: teensy-x86-sd-stubs
 
+      - uses: actions/checkout@v2
+        with:
+          repository: newdigate/teensy-gfx
+          path: teensy-gfx
+
       - name: download dependencies
         run: sudo apt-get update && sudo apt-get install -yq libboost-test-dev libglfw3 libglfw3-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libx11-dev libxmu-dev libxi-dev libgl-dev libglew-dev libboost-test-dev
 
@@ -35,6 +40,10 @@ jobs:
           
       - name: Make and Install teensy-x86-sd-stubs
         run: cd teensy-x86-sd-stubs && mkdir cmake-build-$BUILD_TYPE && cd cmake-build-$BUILD_TYPE && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .. && sudo make install
+
+      - name: Make and Install teensy-gfx
+        run: |
+          cd teensy-gfx && mkdir cmake-build-$BUILD_TYPE && cd cmake-build-$BUILD_TYPE && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .. && sudo make install
 
       - name: Make and Install st7735
         run: mkdir cmake-build-$BUILD_TYPE && cd cmake-build-$BUILD_TYPE && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .. && sudo make install

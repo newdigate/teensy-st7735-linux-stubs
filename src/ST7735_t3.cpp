@@ -49,7 +49,7 @@ ST7735DMA_Data ST7735_t3::_dma_data[3];   // one structure for each SPI buss...
 #endif
 
 // Constructor when using software SPI.  All output pins are configurable.
-ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t sid, uint8_t sclk, uint8_t rst) : AbstractDisplay(128, 128)
+ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t sid, uint8_t sclk, uint8_t rst) : View(128, 128)
 {
     _cs   = cs;
     _rs   = rs;
@@ -84,7 +84,7 @@ ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t sid, uint8_t sclk, uint8_t 
 
 // Constructor when using hardware SPI.  Faster, but must use SPI pins
 // specific to each board type (e.g. 11,13 for Uno, 51,52 for Mega, etc.)
-ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t rst) : AbstractDisplay(128, 128)
+ST7735_t3::ST7735_t3(uint8_t cs, uint8_t rs, uint8_t rst) : View(128, 128)
 {
     _cs   = cs;
     _rs   = rs;
@@ -180,7 +180,7 @@ void ST7735_t3::initR(uint8_t options)
     setRotation(0);
 }
 void ST7735_t3::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-    AbstractDisplay::drawLine(x0, y0, x1, y1, color);
+    View::drawLine(x0, y0, x1, y1, color);
 #ifdef ENABLE_ST77XX_FRAMEBUFFER
     if (!_use_fbtft) {
 		writecommand_last(ST7735_NOP);
