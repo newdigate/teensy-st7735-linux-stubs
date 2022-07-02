@@ -30,17 +30,12 @@ target_link_libraries(basic ${teensy_x86_sd_stubs_LIBS})
 target_link_libraries(basic ${teensy_x86_bounce2_stubs_LIBS})
 target_link_libraries(basic ${teensy_x86_encoder_stubs_LIBS})
 target_link_libraries(basic ${teensy_gfx_LIBS})
-target_link_libraries(basic ${teensy_audio_x86_stubs_LIBS})
-target_link_libraries(basic ${teensy_audio_x86_stubs_soundio_LIBS})
-target_link_libraries(basic -L/usr/local/lib/ rtmidi)
 target_link_libraries(basic ${teensy_st7735_linux_stubs_LIBS})
 target_link_libraries(basic ${teensy_st7735_linux_extras_opengl_LIBS})
-target_link_libraries(basic ${teensy_gfx_LIBS})
 
 include(../../opengl.cmake.in)
 target_link_libraries(basic ${LIBS})
 
-target_link_libraries(basic "-L/usr/local/lib -lsoundio")
 if  (APPLE)
         target_link_libraries(basic
                 "-framework CoreServices"
