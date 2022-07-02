@@ -28,6 +28,7 @@ void tftPrintTest();
 void mediabuttons();
 
 int st7735_main(int argc, char** argv) {
+    return 0;
 }
 
 void setup() {

@@ -37,6 +37,7 @@ uint32_t read32();
 File     bmpFile;
 
 int st7735_main(int argc, char** argv) {
+    return 0;
 }
 
 int main() {

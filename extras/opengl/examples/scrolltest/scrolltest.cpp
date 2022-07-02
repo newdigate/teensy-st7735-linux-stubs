@@ -31,6 +31,7 @@
 st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 int st7735_main(int argc, char** argv) {
+    return 0;
 }
 
 void setup() {

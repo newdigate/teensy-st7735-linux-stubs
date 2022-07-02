@@ -16,6 +16,7 @@ Bounce2::Button button;
 st7735_opengl<NoEncoder, Bounce2::Button> tft = st7735_opengl<NoEncoder, Bounce2::Button>(true, 10, nullptr, nullptr, &button);
 
 int st7735_main(int argc, char** argv) {
+    return 0;
 }
 
 bool buttonWasPressed = false;
