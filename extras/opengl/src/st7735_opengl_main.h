@@ -26,8 +26,8 @@ int main(int argc, char** argv) {
     st7735_main(argc, argv);
     setup();
     int rc = pthread_create(&thread, NULL, arduinoThread, (void *)0);
-    while (!st7735_opengl::shouldClose() && !arduino_should_exit) {
-        st7735_opengl::refresh();
+    while (!st7735_opengl_window::shouldClose() && !arduino_should_exit) {
+        st7735_opengl_window::refresh();
         usleep(1000);
     }
     shouldClose = true;

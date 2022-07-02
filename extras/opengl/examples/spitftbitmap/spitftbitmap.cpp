@@ -29,7 +29,7 @@
 #include "parrot.h"
 #define SD_CS 4
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
-st7735_opengl tft = st7735_opengl(true, 10);
+st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 void bmpDraw(const char *filename, uint8_t x, uint16_t y);
 uint16_t read16();
@@ -37,6 +37,7 @@ uint32_t read32();
 File     bmpFile;
 
 int st7735_main(int argc, char** argv) {
+    return 0;
 }
 
 int main() {
@@ -47,7 +48,7 @@ int main() {
     // only uncomment one of these display initializers.
     // ST7735 - More options mentioned in examples for st7735_t3 library
     //tft.initR(INITR_BLACKTAB); // if you're using a 1.8" TFT 128x160 displays
-    tft.initR(INITR_144GREENTAB); // if you're using a 1.44" TFT (128x128)
+    //tft.initR(INITR_144GREENTAB); // if you're using a 1.44" TFT (128x128)
     //tft.initR(INITR_MINI160x80);  //if you're using a .96" TFT(160x80)
 
     // ST7789
@@ -86,12 +87,12 @@ int main() {
     Serial.print("OK!\n");
     bmpDraw("parrot.bmp", 0, 0);
     tft.updateScreen();
-    while(!tft.shouldClose()) {
-        tft.updateScreen();
-        delay(10);
-    }
 }
 
+void loop() {
+    tft.updateScreen();
+    delay(10);
+ }
 // This function opens a Windows Bitmap (BMP) file and
 // displays it at the given coordinates.  It's sped up
 // by reading many pixels worth of data at a time

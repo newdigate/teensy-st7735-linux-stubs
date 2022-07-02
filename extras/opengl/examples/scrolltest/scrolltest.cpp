@@ -14,19 +14,30 @@
  ****************************************************/
 
 #include "st7735_opengl.h"
+#include "st7735_opengl_main.h"
 #include "st7735_t3_font_ComicSansMS.h"
 
+#define ST7735_BLACK 0x0000
+#define ST7735_WHITE 0xFFFF
+#define ST7735_RED 0xF800
+#define ST7735_GREEN 0x07E0
+#define ST7735_BLUE 0x001F
+#define ST7735_CYAN 0x07FF
+#define ST7735_MAGENTA 0xF81F
+#define ST7735_YELLOW 0xFFE0
+#define ST7735_ORANGE 0xFC00
+
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
-st7735_opengl tft = st7735_opengl(true, 10);
+st7735_opengl_noinput tft = st7735_opengl_noinput(true, 10);
 
 int st7735_main(int argc, char** argv) {
+    return 0;
 }
 
-int main() {
+void setup() {
 
     Serial.begin(9600);
 
-    tft.initR();           // Init ST7789 320x240
     tft.setRotation(3);
     tft.useFrameBuffer(true);
     tft.updateScreenAsync(true);
@@ -70,11 +81,10 @@ int main() {
         tft.updateScreen();
         delay(500);
     }
-
-    while(!tft.shouldClose()) {
-        tft.updateScreen();
-        delay(10);
-    }
 }
 
+void loop() {
+    tft.updateScreen();
+    delay(10);
+ }
 
