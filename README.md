@@ -64,7 +64,8 @@ target_link_libraries(your_application ${teensy_st7735_linux_extras_opengl_LIBS}
 ``` c++
 #include "Arduino.h"          // from teensy-x86-stubs
 #include "st7735_opengl.h"
-st7735_opengl tft = st7735_opengl();
+
+st7735_opengl_noinput tft = st7735_opengl_noinput();
 
 void testlines(uint16_t color) {
     tft.fillScreen(ST7735_BLACK);
