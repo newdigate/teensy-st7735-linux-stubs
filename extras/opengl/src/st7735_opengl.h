@@ -335,7 +335,7 @@ public:
         _encoderLeftRight = encoderLeftRight;
         _encoderUpDown = encoderUpDown;
         _button = button;
-        if (st7735_opengl_window::InitOpenGL(frameSize, drawFrame))
+        if (st7735_opengl_window::InitOpenGL(frameSize, drawFrame, key_callback, character_callback))
             return;
     }
 

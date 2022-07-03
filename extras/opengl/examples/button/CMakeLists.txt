@@ -34,7 +34,7 @@ target_link_libraries(button ${teensy_x86_stubs_LIBS})
 target_link_libraries(button ${teensy_x86_bounce2_stubs_LIBS})
 target_link_libraries(button ${teensy_st7735_linux_stubs_LIBS})
 target_link_libraries(button ${teensy_st7735_linux_extras_opengl_LIBS})
-target_link_libraries(button ${teensy_x86_bounce2_stubs_LIBS})
+target_link_libraries(button ${teensy_x86_encoder_stubs_LIBS})
 target_link_libraries(button ${teensy_gfx_LIBS})
 
 target_link_libraries(button ${LIBS})
