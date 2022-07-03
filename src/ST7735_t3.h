@@ -21,7 +21,6 @@
 
 #include "Arduino.h"
 #include "View.h"
-#include "ILI9341_fonts.h"
 #include <cmath>
 
 #define INITR_GREENTAB 0x0
@@ -65,14 +64,9 @@
 #define ST77XX_ORANGE     0xFC00
 #define ST77XX_PINK       0xF81F
 
-// Map fonts that were modified back to the ILI9341 font
-#define ST7735_t3_font_t ILI9341_t3_font_t
-
 #ifndef st7735_swap
 #define st7735_swap(a, b) { typeof(a) t = a; a = b; b = t; }
 #endif
-
-
 
 #define CL(_r,_g,_b) ((((_r)&0xF8)<<8)|(((_g)&0xFC)<<3)|((_b)>>3))
 
