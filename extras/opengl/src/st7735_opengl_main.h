@@ -1,8 +1,8 @@
 #ifndef TEENSY_ST7735_LINUX_ST7735_OPENGL_MAIN_H
 #define TEENSY_ST7735_LINUX_ST7735_OPENGL_MAIN_H
 
+#include <Arduino.h>
 #include "st7735_opengl.h"
-#include <unistd.h>
 
 void setup();
 void loop();
@@ -13,7 +13,7 @@ void *arduinoThread(void *threadid) {
     tid = (long)threadid;
     while(!shouldClose and !arduino_should_exit) {
         loop();
-        usleep(1000);
+        delay(1);
     }
 //    cout << "Hello World! Thread ID, " << tid << endl;
     pthread_exit(NULL);
@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     int rc = pthread_create(&thread, NULL, arduinoThread, (void *)0);
     while (!st7735_opengl_window::shouldClose() && !arduino_should_exit) {
         st7735_opengl_window::refresh();
-        usleep(1000);
+        delay(1);
     }
     shouldClose = true;
 }

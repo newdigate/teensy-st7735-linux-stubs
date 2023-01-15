@@ -493,12 +493,12 @@ public:
     }
 
 private:
-    static string _textCharacterInput;
+    static std::string _textCharacterInput;
 
 };
 
 template <typename TEncoder, typename TButton> 
-string st7735_opengl<TEncoder, TButton>::_textCharacterInput;
+std::string st7735_opengl<TEncoder, TButton>::_textCharacterInput;
 template <typename TEncoder, typename TButton> 
 TEncoder *st7735_opengl<TEncoder, TButton>::_encoderUpDown = nullptr;
 template <typename TEncoder, typename TButton> 

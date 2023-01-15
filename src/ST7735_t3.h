@@ -21,7 +21,6 @@
 
 #include "Arduino.h"
 #include "View.h"
-#include <cmath>
 
 #define INITR_GREENTAB 0x0
 #define INITR_REDTAB   0x1
