@@ -324,6 +324,9 @@ public:
     static TEncoder *_encoderUpDown;
     static TEncoder *_encoderLeftRight;
     static TButton *_button;
+    static TButton *_button2;
+    static TButton *_button3;
+
 
     st7735_opengl() : st7735_opengl(false) {
     }
@@ -331,10 +334,14 @@ public:
     st7735_opengl(bool drawFrame) : st7735_opengl(drawFrame, 20) {
     }
 
-    st7735_opengl(bool drawFrame, int16_t frameSize, TEncoder *encoderUpDown = nullptr, TEncoder *encoderLeftRight = nullptr, TButton *button = nullptr): View(128, 128){
+    st7735_opengl(bool drawFrame, int16_t frameSize, TEncoder *encoderUpDown = nullptr, TEncoder *encoderLeftRight = nullptr, TButton *button = nullptr, TButton *button2 = nullptr, TButton *button3 = nullptr): 
+            View(128, 128) 
+    {
         _encoderLeftRight = encoderLeftRight;
         _encoderUpDown = encoderUpDown;
         _button = button;
+        _button2 = button2;
+        _button3 = button3;
         if (st7735_opengl_window::InitOpenGL(frameSize, drawFrame, key_callback, character_callback))
             return;
     }
@@ -428,22 +435,48 @@ public:
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         if (action == GLFW_RELEASE) {
             switch(key) {
+                case GLFW_KEY_1:
                 case GLFW_KEY_SPACE: {
                     if (_button != nullptr) {
                         _button->setState(false);
                     }
                     break;
                 }
+                case GLFW_KEY_2: {
+                    if (_button2 != nullptr) {
+                        _button2->setState(false);
+                    }
+                    break;
+                }              
+                case GLFW_KEY_3: {
+                    if (_button3 != nullptr) {
+                        _button3->setState(false);
+                    }
+                    break;
+                }                      
             }
         } else if (action == GLFW_PRESS)
         {
             switch(key) {
+                case GLFW_KEY_1:
                 case GLFW_KEY_SPACE: {
                     if (_button != nullptr) {
                         _button->setState(true);
                     }
                     break;
                 }
+                case GLFW_KEY_2: {
+                    if (_button2 != nullptr) {
+                        _button2->setState(true);
+                    }
+                    break;
+                }              
+                case GLFW_KEY_3: {
+                    if (_button3 != nullptr) {
+                        _button3->setState(true);
+                    }
+                    break;
+                }      
                 case GLFW_KEY_UP: {
                     if (_encoderUpDown != nullptr) {
                         _encoderUpDown->increase(-4);
@@ -505,6 +538,10 @@ template <typename TEncoder, typename TButton>
 TEncoder *st7735_opengl<TEncoder, TButton>::_encoderLeftRight = nullptr;
 template <typename TEncoder, typename TButton> 
 TButton *st7735_opengl<TEncoder, TButton>::_button = nullptr;
+template <typename TEncoder, typename TButton> 
+TButton *st7735_opengl<TEncoder, TButton>::_button2 = nullptr;
+template <typename TEncoder, typename TButton> 
+TButton *st7735_opengl<TEncoder, TButton>::_button3 = nullptr;
 
 class NoEncoder {
 public:
@@ -519,7 +556,7 @@ public:
 class st7735_opengl_noinput : public st7735_opengl<NoEncoder, NoButton> {
 public:
     st7735_opengl_noinput(bool drawFrame) : st7735_opengl<NoEncoder, NoButton>(drawFrame) {}
-    st7735_opengl_noinput(bool drawFrame, int16_t frameSize) : st7735_opengl<NoEncoder, NoButton>(drawFrame, frameSize, nullptr, nullptr, nullptr) {}
+    st7735_opengl_noinput(bool drawFrame, int16_t frameSize) : st7735_opengl<NoEncoder, NoButton>(drawFrame, frameSize, nullptr, nullptr, nullptr, nullptr, nullptr) {}
     st7735_opengl_noinput() : st7735_opengl<NoEncoder, NoButton>() {}
 };
 #endif //TEENSY_ST7735_LINUX_ST7735_OPENGL_H
