@@ -10,11 +10,5 @@ FetchContent_MakeAvailable(cmake_declare_and_fetch)
 include("${FETCHCONTENT_BASE_DIR}/cmake_declare_and_fetch-src/DeclareAndFetchCMake.in")
 #********** CMAKE DECLARE AND FETCH MACRO ******
 
-# ********* x86 teensy cores :: feature/shared_serial branch
-set(BUILD_SHARED_LIBRARY ON)
-set(REDIRECT_SERIAL_OUT_TO_STD_OUT OFF)
-message("--REDIRECT_SERIAL_OUT_TO_STD_OUT ${REDIRECT_SERIAL_OUT_TO_STD_OUT}" )
-DeclareAndFetch(teensy_x86_stubs https://github.com/newdigate/teensy-x86-stubs.git feature/shared_serial src)
-
-# ********* x86 gfx :: main branch
-DeclareAndFetch(teensy_gfx https://github.com/newdigate/teensy-gfx.git main src)
+DeclareAndFetch(teensy_x86_stubs https://github.com/newdigate/teensy-x86-stubs.git noinstall src)
+DeclareAndFetch(teensy_gfx https://github.com/newdigate/teensy-gfx.git noinstall src)
