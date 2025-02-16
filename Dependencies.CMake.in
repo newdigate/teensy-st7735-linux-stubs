@@ -1,6 +1,0 @@
-cmake_minimum_required(VERSION 3.5)
-
-include(cmake_declare_and_fetch.cmake.in)
-
-DeclareAndFetch(teensy_x86_stubs https://github.com/newdigate/teensy-x86-stubs.git noinstall src)
-DeclareAndFetch(teensy_gfx https://github.com/newdigate/teensy-gfx.git noinstall src)

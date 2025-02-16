@@ -5,10 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 # comment out the line below to reference source, rather than referencing installed libraries (default)
 
 include_directories(../../src)
-DeclareAndFetch(teensy_x86_encoder_stubs https://github.com/newdigate/teensy-x86-encoder-stubs.git noinstall src)
-DeclareAndFetch(teensy_x86_bounce2_stubs https://github.com/newdigate/teensy-x86-bounce2-stubs.git noinstall src)
-
-include(../../opengl.cmake.in)
 
 set(APP_SOURCES graphicstest.cpp)
 

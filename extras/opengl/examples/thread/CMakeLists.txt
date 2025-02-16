@@ -4,8 +4,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 include_directories(../../src)
 
-include(../../opengl.cmake.in)
-
 set(APP_SOURCES thread.cpp)
 
 add_executable(thread ${APP_SOURCES})

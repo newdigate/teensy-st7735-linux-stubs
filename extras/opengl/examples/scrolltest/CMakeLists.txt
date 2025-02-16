@@ -3,7 +3,6 @@ project(teensy_st7735_linux_extras_opengl_examples_scrolltest C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(../../src)
-include(../../opengl.cmake.in)
 
 set(APP_SOURCES scrolltest.cpp)
 
