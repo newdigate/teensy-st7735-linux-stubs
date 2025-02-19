@@ -1,36 +1,12 @@
 #ifndef TEENSY_ST7735_LINUX_ST7735_OPENGL_MAIN_H
 #define TEENSY_ST7735_LINUX_ST7735_OPENGL_MAIN_H
 
-#include <Arduino.h>
-#include "st7735_opengl.h"
-
 void setup();
 void loop();
-volatile bool shouldClose = false;
+extern volatile bool shouldClose;
 
-void *arduinoThread(void *threadid) {
-    long tid;
-    tid = (long)threadid;
-    while(!shouldClose and !arduino_should_exit) {
-        loop();
-        delay(1);
-    }
-//    cout << "Hello World! Thread ID, " << tid << endl;
-    pthread_exit(NULL);
-}
+void *arduinoThread(void *threadid);
 extern int st7735_main(int argc, char** argv);
-
-int main(int argc, char** argv) {
-    pthread_t thread;
-    initialize_mock_arduino();
-    st7735_main(argc, argv);
-    setup();
-    int rc = pthread_create(&thread, NULL, arduinoThread, (void *)0);
-    while (!st7735_opengl_window::shouldClose() && !arduino_should_exit) {
-        st7735_opengl_window::refresh();
-        delay(1);
-    }
-    shouldClose = true;
-}
+int main(int argc, char** argv);
 
 #endif //TEENSY_ST7735_LINUX_ST7735_OPENGL_MAIN_H

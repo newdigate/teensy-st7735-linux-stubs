@@ -15,7 +15,7 @@
 
 #include "st7735_opengl.h"
 #include "st7735_opengl_main.h"
-#include "st7735_t3_font_ComicSansMS.h"
+#include "../../../src/st7735_t3_font_ComicSansMS.h"
 
 #define ST7735_BLACK 0x0000
 #define ST7735_WHITE 0xFFFF

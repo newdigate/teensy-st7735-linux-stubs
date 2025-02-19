@@ -26,6 +26,7 @@
 #include <SD.h>
 
 #include "st7735_opengl.h"
+#include "st7735_opengl_main.h"
 #include "parrot.h"
 #define SD_CS 4
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
@@ -40,7 +41,7 @@ int st7735_main(int argc, char** argv) {
     return 0;
 }
 
-int main() {
+void setup() {
     Serial.begin(9600);
     SD.setSDCardFileData((char *)parrot_bmp, parrot_bmp_len);
     tft.useFrameBuffer(true);
@@ -91,7 +92,7 @@ int main() {
 
 void loop() {
     tft.updateScreen();
-    delay(10);
+    delay(100000000);
  }
 // This function opens a Windows Bitmap (BMP) file and
 // displays it at the given coordinates.  It's sped up
